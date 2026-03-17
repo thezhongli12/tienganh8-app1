@@ -16,7 +16,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 
 // Kết nối MongoDB (Nhớ kiểm tra biến môi trường trên Vercel)
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:hongphap2012@cluster0.fwz1mo6.mongodb.net/EnglishQuiz8?retryWrites=true&w=majority&appName=Cluster0";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:hongphap2012@cluster0.fwz1mo6.mongodb.net/?appName=Cluster0";
 
 mongoose.connect(MONGO_URI);
 
