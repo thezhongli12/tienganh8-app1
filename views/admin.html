@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f4f7f6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: #1a73e8;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .score-pill {
+            background: #e8f0fe;
+            color: #1a73e8;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📊 Danh sách Học sinh & Điểm số (Real-time Cloud)</h2>
+        <a href="/">← Quay lại</a>
+        <table>
+            <tr>
+                <th>Học sinh</th>
+                <th>Mật khẩu</th>
+                <th>Điểm cao nhất (Từng Unit)</th>
+                <th>Ngày tham gia</th>
+            </tr>
+            <% users.forEach(u => { %>
+            <tr>
+                <td><b><%= u.username %></b></td>
+                <td style="color:#888;"><%= u.password %></td>
+                <td>
+                    <% u.highScores.forEach((val, key) => { %>
+                    <span class="score-pill">Unit <%= key %>: <%= val %>đ</span>
+                    <% }) %>
+                </td>
+                <td><%= u.joinedDate %></td>
+            </tr>
+            <% }) %>
+        </table>
+    </div>
+</body>
+</html>

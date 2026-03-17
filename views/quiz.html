@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= unit.title %> - Làm bài</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .quiz-wrapper {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .header-area {
+            border-bottom: 2px solid #1a73e8;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: #5f6368;
+            font-weight: bold;
+        }
+
+        .question-block {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #f0f0f0;
+            border-radius: 12px;
+            background: #fafafa;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* Custom Radio Style */
+        .option-label {
+            display: block;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            background: white;
+        }
+
+            .option-label:hover {
+                background: #e8f0fe;
+                border-color: #1a73e8;
+            }
+
+        input[type="radio"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        /* Input Text Style */
+        .text-answer {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+            .text-answer:focus {
+                border-color: #1a73e8;
+                outline: none;
+            }
+
+        .submit-section {
+            margin-top: 50px;
+        }
+
+        .btn-finish {
+            width: 100%;
+            padding: 18px;
+            background: #34a853;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(52, 168, 83, 0.2);
+        }
+
+            .btn-finish:hover {
+                background: #2d8e47;
+            }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-wrapper">
+        <div class="header-area">
+            <a href="/" class="back-link">← Thoát</a>
+            <h2 style="margin:0; color: #1a73e8;"><%= unit.title %></h2>
+        </div>
+
+        <form action="/score/<%= id %>" method="POST">
+            <% unit.questions.forEach((q, index) => { %>
+            <div class="question-block">
+                <span class="question-text">Câu <%= index + 1 %>: <%= q.q %></span>
+
+                <% if(q.type === 'multiple_choice') { %>
+                <% q.options.forEach((opt, i) => { %>
+                <label class="option-label">
+                    <input type="radio" name="q<%= index %>" value="<%= String.fromCharCode(65 + i) %>" required>
+                    <b><%= String.fromCharCode(65 + i) %>.</b> <%= opt %>
+                </label>
+                <% }) %>
+                <% } else { %>
+                <input type="text" name="q<%= index %>" class="text-answer" placeholder="Nhập đáp án của bạn..." required autocomplete="off">
+                <% } %>
+            </div>
+            <% }) %>
+
+            <div class="submit-section">
+                <button type="submit" class="btn-finish">NỘP BÀI TẬP</button>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>
