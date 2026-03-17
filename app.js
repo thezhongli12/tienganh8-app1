@@ -3,22 +3,23 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const path = require('path');
-const fs = require('fs');
 
 const app = express();
 
-// CẤU HÌNH ĐƯỜNG DẪN CHO VERCEL
-app.set('views', path.join(__dirname, 'views'));
+// CẤU HÌNH GIAO DIỆN - Sửa lỗi "Failed to lookup view"
+app.set('views', path.join(process.cwd(), 'views'));
 app.set('view engine', 'html');
 app.engine('html', require('ejs').renderFile);
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(express.urlencoded({ extended: true }));
 
-// Kết nối MongoDB (Nhớ kiểm tra biến môi trường trên Vercel)
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:hongphap2012@cluster0.fwz1mo6.mongodb.net/?appName=Cluster0";
+// Kết nối MongoDB từ biến môi trường (Environment Variables)
+const MONGO_URI = process.env.MONGO_URI;
 
-mongoose.connect(MONGO_URI);
+mongoose.connect(MONGO_URI)
+    .then(() => console.log("Kết nối DB thành công"))
+    .catch(err => console.error("Lỗi kết nối DB:", err));
 
 app.use(session({
     secret: 'hongphap-secret',
@@ -28,18 +29,24 @@ app.use(session({
     cookie: { maxAge: 14 * 24 * 60 * 60 * 1000 }
 }));
 
-// ROUTE ĐƠN GIẢN ĐỂ KIỂM TRA LỖI
+// ROUTES
 app.get('/login', (req, res) => {
-    try {
-        res.render('login');
-    } catch (err) {
-        res.status(500).send("Lỗi render file login: " + err.message);
+    res.render('login'); // Sẽ tìm file views/login.html
+});
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    // Kiểm tra password admin bạn đã lưu là 080212
+    if (username === 'admin' && password === '080212') {
+        req.session.user = username;
+        return res.redirect('/');
     }
+    res.send('Sai tài khoản hoặc mật khẩu!');
 });
 
 app.get('/', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    res.render('index');
+    res.render('index'); // Sẽ tìm file views/index.html
 });
 
-module.exports = app; // QUAN TRỌNG: Dòng này giúp Vercel nhận diện app
+module.exports = app;
