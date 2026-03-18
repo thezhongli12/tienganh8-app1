@@ -2,85 +2,43 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hệ Thống Quản Trị - Tiếng Anh 8</title>
+    <title>Admin - Quản lý Người dùng</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; margin: 0; }
-        header { background: #34495e; color: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; }
+        header { background: #1c1e21; color: white; padding: 15px 5%; display: flex; justify-content: space-between; }
         .container { padding: 30px 5%; }
-        .section { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-        
-        /* Table Style */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        table th, table td { padding: 12px; border: 1px solid #eee; text-align: left; }
-        table th { background: #3498db; color: white; }
-        table tr:hover { background: #f9f9f9; }
-        
-        .badge { background: #e74c3c; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-        .btn-edit { background: #2ecc71; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #007bff; color: white; }
+        tr:hover { background: #f1f1f1; }
+        .pw-code { background: #eee; padding: 3px 6px; border-radius: 4px; font-family: monospace; }
     </style>
 </head>
 <body>
     <header>
-        <h3>ADMIN DASHBOARD</h3>
-        <div>
-            <span>Admin: <strong>080212</strong></span> | 
-            <a href="/logout" style="color: #ff7675;">Thoát</a>
-        </div>
+        <h2>Hệ thống Quản trị</h2>
+        <a href="/logout" style="color: #ff4757; text-decoration: none; font-weight: bold;">Đăng xuất</a>
     </header>
-
     <div class="container">
-        <div class="section">
-            <h2>📚 Quản lý câu hỏi Tiếng Anh 8</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Unit</th>
-                        <th>Nội dung câu hỏi</th>
-                        <th>Đáp án</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Unit 1</td>
-                        <td>What is your hobby?</td>
-                        <td>Reading books</td>
-                        <td><a href="#" class="btn-edit">Sửa</a></td>
-                    </tr>
-                    </tbody>
-            </table>
-        </div>
-
-        <div class="section">
-            <h2>👥 Danh sách người dùng đăng ký</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Thời gian</th>
-                        <th>Tên tài khoản (TK)</th>
-                        <th>Mật khẩu (MK)</th>
-                        <th>Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if(typeof usersList !== 'undefined' && usersList.length > 0) { %>
-                        <% usersList.forEach(u => { %>
-                            <tr>
-                                <td><%= new Date(u.createdAt).toLocaleString('vi-VN') %></td>
-                                <td><strong><%= u.username %></strong></td>
-                                <td><code><%= u.password %></code></td>
-                                <td><span class="badge">Thành viên</span></td>
-                            </tr>
-                        <% }) %>
-                    <% } else { %>
-                        <tr>
-                            <td colspan="4" style="text-align: center;">Chưa có người dùng nào đăng ký</td>
-                        </tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
+        <h1>Danh sách thành viên đăng ký</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ngày đăng ký</th>
+                    <th>Tên tài khoản</th>
+                    <th>Mật khẩu</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% usersList.forEach(u => { %>
+                <tr>
+                    <td><%= new Date(u.createdAt).toLocaleString('vi-VN') %></td>
+                    <td><strong><%= u.username %></strong></td>
+                    <td><span class="pw-code"><%= u.password %></span></td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
     </div>
 </body>
 </html>
