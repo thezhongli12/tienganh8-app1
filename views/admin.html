@@ -2,43 +2,95 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - Quản lý Người dùng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản trị - Admin</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; }
-        header { background: #1c1e21; color: white; padding: 15px 5%; display: flex; justify-content: space-between; }
-        .container { padding: 30px 5%; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #007bff; color: white; }
-        tr:hover { background: #f1f1f1; }
-        .pw-code { background: #eee; padding: 3px 6px; border-radius: 4px; font-family: monospace; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; padding: 30px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #4a90e2; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 40px; border-left: 5px solid #4a90e2; padding-left: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { padding: 12px 15px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #4a90e2; color: white; text-transform: uppercase; font-size: 14px; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f7ff; }
+        
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-info { background: #d1ecf1; color: #0c5460; }
+        
+        .nav-admin { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-logout { background: #e74c3c; color: white; text-decoration: none; padding: 8px 15px; border-radius: 5px; }
     </style>
 </head>
 <body>
-    <header>
-        <h2>Hệ thống Quản trị</h2>
-        <a href="/logout" style="color: #ff4757; text-decoration: none; font-weight: bold;">Đăng xuất</a>
-    </header>
-    <div class="container">
-        <h1>Danh sách thành viên đăng ký</h1>
-        <table>
-            <thead>
+
+<div class="container">
+    <div class="nav-admin">
+        <h1>Bảng Điều Khiển Admin</h1>
+        <a href="/logout" class="btn-logout">Đăng xuất</a>
+    </div>
+
+    <h2><i class="fas fa-users"></i> Danh Sách Thành Viên</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>STT</th>
+                <th>Tên Đăng Nhập</th>
+                <th>Mật Khẩu (Raw)</th>
+                <th>Ngày Tham Gia</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if(usersList && usersList.length > 0) { %>
+                <% usersList.forEach((u, index) => { %>
                 <tr>
-                    <th>Ngày đăng ký</th>
-                    <th>Tên tài khoản</th>
-                    <th>Mật khẩu</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% usersList.forEach(u => { %>
-                <tr>
-                    <td><%= new Date(u.createdAt).toLocaleString('vi-VN') %></td>
+                    <td><%= index + 1 %></td>
                     <td><strong><%= u.username %></strong></td>
-                    <td><span class="pw-code"><%= u.password %></span></td>
+                    <td><code><%= u.password %></code></td>
+                    <td><%= new Date(u.createdAt).toLocaleString('vi-VN') %></td>
                 </tr>
                 <% }) %>
-            </tbody>
-        </table>
-    </div>
+            <% } else { %>
+                <tr><td colspan="4" style="text-align:center;">Chưa có người dùng nào đăng ký.</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+
+    <h2><i class="fas fa-graduation-cap"></i> Kết Quả Làm Bài Gần Đây</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Học Sinh</th>
+                <th>Bài Học</th>
+                <th>Điểm Số</th>
+                <th>Tỉ Lệ %</th>
+                <th>Thời Gian Nộp</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if(scoresList && scoresList.length > 0) { %>
+                <% scoresList.forEach(s => { %>
+                <tr>
+                    <td><span class="badge badge-info"><%= s.username %></span></td>
+                    <td><%= s.lessonTitle %></td>
+                    <td><strong><%= s.score %></strong></td>
+                    <td>
+                        <span class="badge <%= s.percentage >= 50 ? 'badge-success' : '' %>" 
+                              style="<%= s.percentage < 50 ? 'background:#f8d7da; color:#721c24;' : '' %>">
+                            <%= s.percentage %>%
+                        </span>
+                    </td>
+                    <td><%= new Date(s.createdAt).toLocaleString('vi-VN') %></td>
+                </tr>
+                <% }) %>
+            <% } else { %>
+                <tr><td colspan="5" style="text-align:center;">Chưa có dữ liệu điểm số.</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
 </body>
 </html>
