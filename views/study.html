@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title><%= lesson.title %></title>
+    <style>
+        body { font-family: sans-serif; background: white; padding: 40px; text-align: center; }
+        .box { max-width: 600px; margin: auto; padding: 40px; border: 1px solid #ddd; border-radius: 15px; }
+        .back { color: #667eea; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1><%= lesson.title %></h1>
+        <p style="font-size: 20px; color: #555;"><%= lesson.desc %></p>
+        <hr>
+        <p>Nội dung bài học Unit <%= lesson.id %> đang được biên soạn...</p>
+        <br>
+        <a href="/" class="back">← Quay lại trang chủ</a>
+    </div>
+</body>
+</html>
