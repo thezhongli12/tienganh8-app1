@@ -20,7 +20,7 @@ const User = mongoose.model('User', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// Schema Lưu điểm số (Mới)
+// Schema Lưu điểm số
 const Score = mongoose.model('Score', new mongoose.Schema({
     username: String,
     lessonTitle: String,
@@ -65,6 +65,31 @@ app.get('/', (req, res) => {
     res.render('index', { user: req.session.user, lessons: lessonsData });
 });
 
+// Trang đăng ký
+app.get('/register', (req, res) => res.render('register'));
+
+app.post('/register', async (req, res) => {
+    const { username, password } = req.body;
+    
+    // Kiểm tra: Tối đa 6 ký tự, không dấu, không cách (chỉ chữ và số)
+    const userRegex = /^[a-zA-Z0-9]{1,6}$/;
+    if (!userRegex.test(username)) {
+        return res.send("<script>alert('Tên đăng nhập tối đa 6 ký tự, không dấu, không cách!'); window.location.href='/register';</script>");
+    }
+
+    // Kiểm tra: Mật khẩu tối đa 8 ký tự
+    if (password.length > 8) {
+        return res.send("<script>alert('Mật khẩu tối đa 8 ký tự!'); window.location.href='/register';</script>");
+    }
+
+    try {
+        await User.create({ username, password });
+        res.redirect('/login');
+    } catch (e) {
+        res.send("<script>alert('Tên đăng nhập đã tồn tại!'); window.location.href='/register';</script>");
+    }
+});
+
 // Trang học tập & làm bài
 app.get('/study/:id', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
@@ -89,7 +114,7 @@ app.post('/save-score', async (req, res) => {
     res.json({ success: true });
 });
 
-// Trang Admin (Hiển thị User và Điểm)
+// Trang Admin (Hiển thị đầy đủ User và Điểm)
 app.get('/admin', async (req, res) => {
     if (!req.session.user || req.session.user.username !== 'admin') return res.redirect('/login');
     const users = await User.find().sort({ createdAt: -1 });
@@ -99,6 +124,7 @@ app.get('/admin', async (req, res) => {
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
+    // Admin password theo yêu cầu
     if (username === 'admin' && password === '080212') {
         req.session.user = { username: 'admin' };
         return res.redirect('/admin');
