@@ -2,113 +2,98 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= lesson.title %></title>
     <style>
-        :root { --primary: #4a90e2; --success: #2ecc71; --danger: #e74c3c; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-        .header { border-bottom: 2px solid #eee; margin-bottom: 25px; padding-bottom: 10px; }
-        .q-card { border: 1px solid #eee; padding: 20px; margin-bottom: 20px; border-radius: 12px; position: relative; transition: 0.3s; }
-        .q-text { font-size: 1.1em; font-weight: 600; color: #2c3e50; margin-bottom: 15px; display: block; }
-        .passage { background: #f0f7ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid var(--primary); font-style: italic; }
-        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .opt-item { border: 1px solid #ddd; padding: 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; transition: 0.2s; }
-        .opt-item:hover { background: #f1f1f1; }
-        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        
-        /* Trạng thái sau khi nộp bài */
-        .correct { border: 2px solid var(--success); background: #f0fff4; }
-        .wrong { border: 2px solid var(--danger); background: #fff5f5; }
-        .feedback { margin-top: 10px; font-weight: bold; font-size: 0.9em; }
-        
-        .score-board { display: none; text-align: center; padding: 20px; background: #2c3e50; color: white; border-radius: 10px; margin-bottom: 20px; }
-        .btn-submit { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 1.1em; cursor: pointer; width: 100%; margin-top: 10px; }
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; line-height: 1.6; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .q-card { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 10px; transition: 0.3s; }
+        .correct { border: 2px solid #2ecc71; background: #eafff2; }
+        .wrong { border: 2px solid #e74c3c; background: #fff2f1; }
+        .score-box { display: none; text-align: center; background: #2c3e50; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .opt { border: 1px solid #ccc; padding: 10px; border-radius: 5px; cursor: pointer; }
+        .btn { background: #4a90e2; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 17px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="scoreBoard" class="score-board">
-        <h2 id="finalScore">Điểm: 0/0</h2>
-        <p id="motivationalMessage"></p>
-        <button onclick="location.reload()" style="background:none; border:1px solid white; color:white; padding:5px 10px; border-radius:5px; cursor:pointer;">Làm lại bài</button>
+    <div id="result" class="score-box">
+        <h2 id="totalScore">Điểm: 0/0</h2>
+        <a href="/" style="color: #3498db; text-decoration: none;">Về trang chủ</a>
     </div>
 
-    <div class="header">
-        <a href="/" style="text-decoration: none; color: var(--primary);">← Quay lại</a>
-        <h1><%= lesson.title %></h1>
-        <p><%= lesson.desc %></p>
-    </div>
-
+    <h1><%= lesson.title %></h1>
     <form id="quizForm">
-        <% if(questions.length > 0) { %>
-            <% questions.forEach((item, index) => { %>
-                <div class="q-card" id="card-<%= index %>" data-ans="<%= item.answer %>" data-type="<%= item.type %>">
-                    <% if(item.passage) { %> <div class="passage"><%= item.passage %></div> <% } %>
-                    
-                    <span class="q-text">Câu <%= index + 1 %>: <%= item.q %></span>
-
-                    <% if(item.options) { %>
-                        <div class="options">
-                            <% item.options.forEach((opt, idx) => { 
-                                let label = String.fromCharCode(65 + idx); 
-                            %>
-                                <label class="opt-item">
-                                    <input type="radio" name="q-<%= index %>" value="<%= label %>" required>
-                                    <span style="margin-left:10px;"><%= label %>. <%= opt %></span>
-                                </label>
-                            <% }) %>
-                        </div>
-                    <% } else { %>
-                        <input type="text" name="q-<%= index %>" placeholder="Nhập đáp án của bạn..." required>
-                    <% } %>
-                    <div id="feedback-<%= index %>" class="feedback"></div>
-                </div>
-            <% }) %>
-            <button type="button" class="btn-submit" onclick="checkQuiz()">Nộp bài & Xem kết quả</button>
-        <% } else { %>
-            <p style="text-align:center; color:#999;">Dữ liệu Unit này chưa sẵn sàng.</p>
-        <% } %>
+        <% questions.forEach((item, index) => { %>
+            <div class="q-card" id="card-<%= index %>" data-ans="<%= item.answer %>" data-type="<%= item.type %>">
+                <p><strong>Câu <%= index + 1 %>:</strong> <%= item.q %></p>
+                
+                <% if(item.options) { %>
+                    <div class="options">
+                        <% item.options.forEach((opt, idx) => { let L = String.fromCharCode(65+idx); %>
+                            <label class="opt">
+                                <input type="radio" name="ans-<%= index %>" value="<%= L %>" required> <%= L %>. <%= opt %>
+                            </label>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <input type="text" name="ans-<%= index %>" placeholder="Nhập đáp án..." style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc;">
+                <% } %>
+                <p id="msg-<%= index %>" style="font-weight:bold; margin-top:10px;"></p>
+            </div>
+        <% }) %>
+        <button type="button" class="btn" onclick="submitQuiz()">Nộp bài & Lưu điểm</button>
     </form>
 </div>
 
 <script>
-function checkQuiz() {
+async function submitQuiz() {
     const cards = document.querySelectorAll('.q-card');
-    let score = 0;
+    let correctCount = 0;
 
     cards.forEach((card, i) => {
         const type = card.dataset.type;
-        const correct = card.dataset.ans.trim().toLowerCase();
-        const feedback = document.getElementById('feedback-' + i);
+        const answer = card.dataset.ans.trim().toLowerCase();
         let userAns = "";
 
-        if(type === 'multiple_choice' || type === 'reading') {
-            const selected = document.querySelector(`input[name="q-${i}"]:checked`);
-            userAns = selected ? selected.value.toLowerCase() : "";
+        if(type.includes('choice') || type === 'reading') {
+            const picked = document.querySelector(`input[name="ans-${i}"]:checked`);
+            userAns = picked ? picked.value.toLowerCase() : "";
         } else {
-            userAns = document.querySelector(`input[name="q-${i}"]`).value.trim().toLowerCase();
+            userAns = document.querySelector(`input[name="ans-${i}"]`).value.trim().toLowerCase();
         }
 
-        if(userAns === correct) {
-            score++;
-            card.classList.add('correct');
-            feedback.innerHTML = "✅ Đúng rồi!";
-            feedback.style.color = "var(--success)";
+        const msg = document.getElementById('msg-' + i);
+        if(userAns === answer) {
+            correctCount++;
+            card.className = "q-card correct";
+            msg.innerText = "✅ Đúng!";
+            msg.style.color = "green";
         } else {
-            card.classList.add('wrong');
-            feedback.innerHTML = "❌ Sai rồi. Đáp án đúng: " + correct.toUpperCase();
-            feedback.style.color = "var(--danger)";
+            card.className = "q-card wrong";
+            msg.innerText = "❌ Sai. Đáp án: " + answer.toUpperCase();
+            msg.style.color = "red";
         }
     });
 
-    // Hiện bảng điểm
-    document.getElementById('scoreBoard').style.display = 'block';
-    document.getElementById('finalScore').innerText = `Kết quả: ${score}/${cards.length} điểm`;
-    window.scrollTo({top: 0, behavior: 'smooth'});
+    const percent = Math.round((correctCount / cards.length) * 100);
+    
+    // Lưu điểm vào DB qua API
+    await fetch('/save-score', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            lessonTitle: "<%= lesson.title %>",
+            score: `${correctCount}/${cards.length}`,
+            percentage: percent
+        })
+    });
+
+    document.getElementById('result').style.display = "block";
+    document.getElementById('totalScore').innerText = `Kết quả: ${correctCount}/${cards.length} (${percent}%)`;
+    window.scrollTo(0, 0);
 }
 </script>
-
 </body>
 </html>
