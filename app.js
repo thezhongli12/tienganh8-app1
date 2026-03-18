@@ -10,17 +10,15 @@ const app = express();
 // --- 1. KẾT NỐI DATABASE ---
 const mongoURI = process.env.MONGO_URI; 
 mongoose.connect(mongoURI)
-    .then(() => console.log('✅ Đã kết nối MongoDB'))
+    .then(() => console.log('✅ Kết nối MongoDB thành công'))
     .catch(err => console.error('❌ Lỗi DB:', err));
 
-// Schema Người dùng
 const User = mongoose.model('User', new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     createdAt: { type: Date, default: Date.now }
 }));
 
-// Schema Lưu điểm số
 const Score = mongoose.model('Score', new mongoose.Schema({
     username: String,
     lessonTitle: String,
@@ -44,18 +42,18 @@ app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
 
 const lessonsData = [
-    { id: 1, title: "Unit 1: Leisure Activities", desc: "Hoạt động giải trí" },
+    { id: 1, title: "Unit 1: Leisure Activities", desc: "Giải trí" },
     { id: 2, title: "Unit 2: Life in the Countryside", desc: "Nông thôn" },
-    { id: 3, title: "Unit 3: Teenagers", desc: "Tuổi thiếu niên" },
-    { id: 4, title: "Unit 4: Ethnic Groups of VN", desc: "Dân tộc Việt Nam" },
-    { id: 5, title: "Unit 5: Our Customs", desc: "Phong tục tập quán" },
+    { id: 3, title: "Unit 3: Teenagers", desc: "Thiếu niên" },
+    { id: 4, title: "Unit 4: Ethnic Groups of VN", desc: "Dân tộc" },
+    { id: 5, title: "Unit 5: Our Customs", desc: "Phong tục" },
     { id: 6, title: "Unit 6: Lifestyles", desc: "Lối sống" },
-    { id: 7, title: "Unit 7: Environmental Protection", desc: "Bảo vệ môi trường" },
+    { id: 7, title: "Unit 7: Environmental Protection", desc: "Môi trường" },
     { id: 8, title: "Unit 8: Shopping", desc: "Mua sắm" },
     { id: 9, title: "Unit 9: Natural Disasters", desc: "Thiên tai" },
     { id: 10, title: "Unit 10: Communication", desc: "Giao tiếp" },
-    { id: 11, title: "Unit 11: Science and Tech", desc: "Khoa học công nghệ" },
-    { id: 12, title: "Unit 12: Life on other planets", desc: "Sự sống hành tinh khác" }
+    { id: 11, title: "Unit 11: Science and Tech", desc: "Khoa học" },
+    { id: 12, title: "Unit 12: Life on other planets", desc: "Vũ trụ" }
 ];
 
 // --- 3. ROUTES ---
@@ -65,66 +63,39 @@ app.get('/', (req, res) => {
     res.render('index', { user: req.session.user, lessons: lessonsData });
 });
 
-// Trang đăng ký
-app.get('/register', (req, res) => res.render('register'));
-
+// ĐĂNG KÝ
+app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
-    
-    // Kiểm tra: Tối đa 6 ký tự, không dấu, không cách (chỉ chữ và số)
     const userRegex = /^[a-zA-Z0-9]{1,6}$/;
-    if (!userRegex.test(username)) {
-        return res.send("<script>alert('Tên đăng nhập tối đa 6 ký tự, không dấu, không cách!'); window.location.href='/register';</script>");
-    }
 
-    // Kiểm tra: Mật khẩu tối đa 8 ký tự
+    // Kiểm tra định dạng tên
+    if (!userRegex.test(username)) {
+        return res.render('register', { error: 'Tên tối đa 6 ký tự, không dấu, không cách!' });
+    }
+    // Kiểm tra độ dài mật khẩu
     if (password.length > 8) {
-        return res.send("<script>alert('Mật khẩu tối đa 8 ký tự!'); window.location.href='/register';</script>");
+        return res.render('register', { error: 'Mật khẩu tối đa 8 ký tự!' });
     }
 
     try {
+        // Kiểm tra xem tên đã tồn tại chưa
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.render('register', { error: 'Tên đăng nhập này đã được sử dụng!' });
+        }
+
         await User.create({ username, password });
         res.redirect('/login');
     } catch (e) {
-        res.send("<script>alert('Tên đăng nhập đã tồn tại!'); window.location.href='/register';</script>");
+        res.render('register', { error: 'Lỗi hệ thống, vui lòng thử lại!' });
     }
 });
 
-// Trang học tập & làm bài
-app.get('/study/:id', (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
-    const lessonId = req.params.id;
-    const lessonInfo = lessonsData.find(l => l.id == lessonId);
-    try {
-        const allData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'units.json'), 'utf8'));
-        const unitContent = allData['unit' + lessonId];
-        res.render('study', { 
-            user: req.session.user, 
-            lesson: lessonInfo, 
-            questions: (unitContent && unitContent.questions) ? unitContent.questions : [] 
-        });
-    } catch (err) { res.render('study', { user: req.session.user, lesson: lessonInfo, questions: [] }); }
-});
-
-// Route lưu điểm vào DB
-app.post('/save-score', async (req, res) => {
-    if (!req.session.user) return res.status(401).send();
-    const { lessonTitle, score, percentage } = req.body;
-    await Score.create({ username: req.session.user.username, lessonTitle, score, percentage });
-    res.json({ success: true });
-});
-
-// Trang Admin (Hiển thị đầy đủ User và Điểm)
-app.get('/admin', async (req, res) => {
-    if (!req.session.user || req.session.user.username !== 'admin') return res.redirect('/login');
-    const users = await User.find().sort({ createdAt: -1 });
-    const scores = await Score.find().sort({ createdAt: -1 });
-    res.render('admin', { usersList: users, scoresList: scores });
-});
-
+// ĐĂNG NHẬP
+app.get('/login', (req, res) => res.render('login', { error: null }));
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    // Admin password theo yêu cầu
     if (username === 'admin' && password === '080212') {
         req.session.user = { username: 'admin' };
         return res.redirect('/admin');
@@ -134,10 +105,36 @@ app.post('/login', async (req, res) => {
         req.session.user = { username: found.username };
         return res.redirect('/');
     }
-    res.send("<script>alert('Sai rồi!'); window.location.href='/login';</script>");
+    res.render('login', { error: 'Sai tên đăng nhập hoặc mật khẩu!' });
 });
 
-app.get('/login', (req, res) => res.render('login'));
+// HỌC TẬP & LƯU ĐIỂM
+app.get('/study/:id', (req, res) => {
+    if (!req.session.user) return res.redirect('/login');
+    const lessonId = req.params.id;
+    const lessonInfo = lessonsData.find(l => l.id == lessonId);
+    try {
+        const allData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'units.json'), 'utf8'));
+        const unit = allData['unit' + lessonId];
+        res.render('study', { user: req.session.user, lesson: lessonInfo, questions: unit ? unit.questions : [] });
+    } catch (err) { res.render('study', { user: req.session.user, lesson: lessonInfo, questions: [] }); }
+});
+
+app.post('/save-score', async (req, res) => {
+    if (!req.session.user) return res.status(401).send();
+    const { lessonTitle, score, percentage } = req.body;
+    await Score.create({ username: req.session.user.username, lessonTitle, score, percentage });
+    res.json({ success: true });
+});
+
+// ADMIN
+app.get('/admin', async (req, res) => {
+    if (!req.session.user || req.session.user.username !== 'admin') return res.redirect('/login');
+    const users = await User.find().sort({ createdAt: -1 });
+    const scores = await Score.find().sort({ createdAt: -1 });
+    res.render('admin', { usersList: users, scoresList: scores });
+});
+
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/login'); });
 
 app.listen(3000, () => console.log('🚀 Server ON: http://localhost:3000'));
