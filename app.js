@@ -6,71 +6,104 @@ const ejs = require('ejs');
 
 const app = express();
 
-// 1. Cấu hình Database (Lấy từ Environment Variables trên Vercel)
-const mongoURI = process.env.MONGO_URI;
+// --- 1. KẾT NỐI DATABASE ---
+const mongoURI = process.env.MONGO_URI; 
 mongoose.connect(mongoURI)
-  .then(() => console.log('Kết nối DB thành công'))
-  .catch(err => console.error('Lỗi kết nối DB:', err));
+    .then(() => console.log('✅ Kết nối MongoDB thành công!'))
+    .catch(err => console.error('❌ Lỗi kết nối DB:', err));
 
-// 2. Cấu hình Middleware
+// Định nghĩa cấu trúc người dùng (User Model)
+const userSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now } // Tự động lưu thời gian
+});
+const User = mongoose.model('User', userSchema);
+
+// --- 2. CẤU HÌNH MIDDLEWARE ---
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
 app.use(session({
-  secret: 'secret-key-123',
-  resave: false,
-  saveUninitialized: true
+    secret: 'phap_tieng_anh_8_secret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 } // Session tồn tại 1 ngày
 }));
 
-// 3. Cấu hình View Engine (Dùng .html nhưng đọc theo kiểu EJS)
+// Cấu hình View Engine để đọc file .html bằng EJS
 app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
 
-// 4. Các Route xử lý
-// Trang Login
+// --- 3. CÁC ROUTE (ĐƯỜNG DẪN) ---
+
+// Trang chính (Redirect về Login nếu chưa đăng nhập)
+app.get('/', (req, res) => {
+    if (!req.session.user) return res.redirect('/login');
+    res.render('index', { user: req.session.user });
+});
+
+// Giao diện Đăng nhập
 app.get('/login', (req, res) => {
-  res.render('login');
+    res.render('login');
 });
 
 // Xử lý Đăng nhập
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  // Kiểm tra tài khoản admin với pass: 080212
-  if (username === 'admin' && password === '080212') {
-    req.session.user = { username: 'admin', role: 'admin' };
-    return res.redirect('/admin');
-  } else {
-    res.send("<script>alert('Sai tài khoản hoặc mật khẩu!'); window.location.href='/login';</script>");
-  }
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    // Kiểm tra quyền Admin tối cao
+    if (username === 'admin' && password === '080212') {
+        req.session.user = { username: 'admin', role: 'admin' };
+        return res.redirect('/admin');
+    }
+
+    // Kiểm tra người dùng thường trong Database
+    try {
+        const foundUser = await User.findOne({ username, password });
+        if (foundUser) {
+            req.session.user = { username: foundUser.username, role: 'user' };
+            return res.redirect('/');
+        } else {
+            res.send("<script>alert('Sai tài khoản hoặc mật khẩu!'); window.location.href='/login';</script>");
+        }
+    } catch (err) {
+        res.status(500).send("Lỗi hệ thống khi đăng nhập.");
+    }
 });
 
-// Trang Admin (Đã sửa lỗi user undefined)
-app.get('/admin', (req, res) => {
-  if (!req.session.user || req.session.user.username !== 'admin') {
-    return res.redirect('/login');
-  }
-  // TRUYỀN BIẾN user VÀO ĐÂY
-  res.render('admin', { user: req.session.user });
+// TRANG ADMIN (QUẢN LÝ TÀI KHOẢN & CÂU HỎI)
+app.get('/admin', async (req, res) => {
+    // Bảo mật: Chỉ admin mới được vào
+    if (!req.session.user || req.session.user.username !== 'admin') {
+        return res.redirect('/login');
+    }
+
+    try {
+        // Lấy danh sách tất cả người dùng từ DB để hiện lên bảng
+        const usersList = await User.find().sort({ createdAt: -1 });
+        
+        // Render trang admin và truyền dữ liệu sang
+        res.render('admin', { 
+            user: req.session.user, 
+            usersList: usersList 
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Không thể tải danh sách người dùng.");
+    }
 });
 
-// Trang chủ
-app.get('/', (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/login');
-  }
-  res.render('index', { user: req.session.user });
-});
-
-// Đăng xuất
+// Route Đăng xuất
 app.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/login');
+    req.session.destroy();
+    res.redirect('/login');
 });
 
-// Khởi chạy
+// --- 4. KHỞI CHẠY SERVER ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`🚀 Server đang chạy tại: http://localhost:${PORT}`);
 });
