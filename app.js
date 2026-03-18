@@ -6,13 +6,13 @@ const ejs = require('ejs');
 
 const app = express();
 
-// --- 1. KẾT NỐI DATABASE ---
+// --- 1. KẾT NỐI DATABASE (MongoDB Atlas) ---
 const mongoURI = process.env.MONGO_URI; 
 mongoose.connect(mongoURI)
-    .then(() => console.log('✅ DB Connected'))
-    .catch(err => console.error('❌ DB Error:', err));
+    .then(() => console.log('✅ Kết nối Database thành công!'))
+    .catch(err => console.error('❌ Lỗi kết nối DB:', err));
 
-// Định nghĩa Schema người dùng
+// Định nghĩa cấu trúc người dùng (User Model)
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
@@ -20,70 +20,114 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
-// --- 2. CẤU HÌNH ---
+// --- 2. CẤU HÌNH MIDDLEWARE & VIEW ENGINE ---
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
+
 app.use(session({
-    secret: 'phap_secret_key_2026',
+    secret: 'phap_anh_8_2026',
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: true,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 } // Session tồn tại 1 ngày
 }));
 
 app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
 
-// --- 3. ROUTES ---
+// --- 3. CÁC ĐƯỜNG DẪN (ROUTES) ---
 
-// Trang chủ
+// TRANG CHỦ: Hiển thị danh sách bài học
 app.get('/', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    res.render('index', { user: req.session.user });
+
+    const lessons = [
+        { id: 1, title: "Unit 1: Leisure Activities", desc: "Các hoạt động giải trí" },
+        { id: 2, title: "Unit 2: Life in the Countryside", desc: "Cuộc sống vùng nông thôn" },
+        { id: 3, title: "Unit 3: Teenagers", desc: "Tuổi thiếu niên" },
+        { id: 4, title: "Unit 4: Ethnic Groups of Viet Nam", desc: "Các dân tộc Việt Nam" }
+    ];
+
+    res.render('index', { 
+        user: req.session.user, 
+        lessons: lessons 
+    });
 });
 
-// Đăng ký
+// ĐĂNG KÝ: Lưu vào DB và Tự động đăng nhập
 app.get('/register', (req, res) => res.render('register'));
+
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     try {
         const check = await User.findOne({ username });
         if (check) return res.send("<script>alert('Tài khoản đã tồn tại!'); window.location.href='/register';</script>");
         
-        await User.create({ username, password });
-        res.send("<script>alert('Đăng ký thành công!'); window.location.href='/login';</script>");
-    } catch (e) { res.status(500).send("Lỗi đăng ký"); }
+        // Lưu user mới
+        const newUser = await User.create({ username, password });
+        
+        // TỰ ĐỘNG ĐĂNG NHẬP (Cấp session ngay)
+        req.session.user = { username: newUser.username, role: 'user' };
+        
+        // Vào thẳng trang chủ
+        res.redirect('/');
+    } catch (e) {
+        res.status(500).send("Lỗi trong quá trình đăng ký.");
+    }
 });
 
-// Đăng nhập
+// ĐĂNG NHẬP: Kiểm tra Admin hoặc User thường
 app.get('/login', (req, res) => res.render('login'));
+
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    // Admin mặc định (Pass: 080212)
+
+    // Kiểm tra Admin (Mật khẩu: 080212)
     if (username === 'admin' && password === '080212') {
         req.session.user = { username: 'admin', role: 'admin' };
         return res.redirect('/admin');
     }
-    // Người dùng thường
-    const found = await User.findOne({ username, password });
-    if (found) {
-        req.session.user = { username: found.username, role: 'user' };
-        return res.redirect('/');
+
+    // Kiểm tra User thường
+    try {
+        const foundUser = await User.findOne({ username, password });
+        if (foundUser) {
+            req.session.user = { username: foundUser.username, role: 'user' };
+            return res.redirect('/');
+        } else {
+            res.send("<script>alert('Sai tài khoản hoặc mật khẩu!'); window.location.href='/login';</script>");
+        }
+    } catch (err) {
+        res.status(500).send("Lỗi đăng nhập.");
     }
-    res.send("<script>alert('Sai tài khoản hoặc mật khẩu!'); window.location.href='/login';</script>");
 });
 
-// TRANG ADMIN (Chỉ quản lý danh sách người dùng)
+// TRANG ADMIN: Xem danh sách thành viên (Hiện mật khẩu & Thời gian)
 app.get('/admin', async (req, res) => {
-    if (!req.session.user || req.session.user.username !== 'admin') return res.redirect('/login');
-    const users = await User.find().sort({ createdAt: -1 });
-    res.render('admin', { user: req.session.user, usersList: users });
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.redirect('/login');
+    }
+
+    try {
+        const allUsers = await User.find().sort({ createdAt: -1 });
+        res.render('admin', { 
+            user: req.session.user, 
+            usersList: allUsers 
+        });
+    } catch (err) {
+        res.status(500).send("Lỗi tải danh sách người dùng.");
+    }
 });
 
+// ĐĂNG XUẤT
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/login');
 });
 
+// --- 4. CHẠY SERVER ---
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`🚀 Server đang chạy tại: http://localhost:${PORT}`);
+});
