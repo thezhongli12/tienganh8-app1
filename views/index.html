@@ -2,16 +2,44 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Tiếng Anh 8</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học Tiếng Anh 8</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; }
+        header { background: #667eea; color: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .container { padding: 40px 5%; }
+        h1 { color: #333; margin-bottom: 30px; border-left: 5px solid #667eea; padding-left: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+        .lesson-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.3s; border-top: 6px solid #667eea; }
+        .lesson-card:hover { transform: translateY(-8px); box-shadow: 0 12px 20px rgba(0,0,0,0.1); }
+        .lesson-card h3 { color: #2d3436; margin-top: 0; }
+        .lesson-card p { color: #636e72; font-size: 14px; line-height: 1.5; }
+        .btn-study { display: inline-block; margin-top: 15px; padding: 10px 25px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        .btn-study:hover { background: #5a67d8; }
+        .logout-btn { color: white; text-decoration: none; border: 1.5px solid white; padding: 6px 15px; border-radius: 8px; font-weight: 500; }
+        .logout-btn:hover { background: white; color: #667eea; }
+    </style>
 </head>
 <body>
-    <header style="display: flex; justify-content: space-between; padding: 10px;">
-        <h3>Chào mừng <%= (typeof user !== 'undefined') ? user.username : '' %> đến với English 8</h3>
-        <a href="/logout">Thoát</a>
-    </header>
-    
-    <div class="content">
-        <h1>Danh sách bài học</h1>
+    <header>
+        <div style="font-size: 22px; font-weight: bold;">ENGLISH 8</div>
+        <div>
+            <span>Chào, <strong><%= user.username %></strong></span> | 
+            <a href="/logout" class="logout-btn">Đăng xuất</a>
         </div>
+    </header>
+
+    <div class="container">
+        <h1>📚 Bài học của bạn</h1>
+        <div class="grid">
+            <% lessons.forEach(lesson => { %>
+                <div class="lesson-card">
+                    <h3><%= lesson.title %></h3>
+                    <p><%= lesson.desc %></p>
+                    <a href="#" class="btn-study">Bắt đầu học →</a>
+                </div>
+            <% }) %>
+        </div>
+    </div>
 </body>
 </html>
