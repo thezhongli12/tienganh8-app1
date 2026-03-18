@@ -4,19 +4,48 @@
     <meta charset="UTF-8">
     <title><%= lesson.title %></title>
     <style>
-        body { font-family: sans-serif; background: white; padding: 40px; text-align: center; }
-        .box { max-width: 600px; margin: auto; padding: 40px; border: 1px solid #ddd; border-radius: 15px; }
-        .back { color: #667eea; text-decoration: none; font-weight: bold; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; padding: 20px; }
+        .container { max-width: 850px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-back { display: inline-block; margin-bottom: 20px; color: #667eea; text-decoration: none; font-weight: bold; }
+        h1 { color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+        .q-card { background: #fff; border: 1px solid #eee; padding: 20px; margin-bottom: 20px; border-radius: 10px; border-left: 5px solid #667eea; }
+        .question-text { font-size: 18px; font-weight: bold; margin-bottom: 15px; display: block; }
+        .option { display: block; padding: 12px; margin: 8px 0; background: #f1f5f9; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .option:hover { background: #e2e8f0; }
+        input[type="radio"] { margin-right: 10px; transform: scale(1.2); }
+        .submit-btn { background: #667eea; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; font-weight: bold; }
+        .no-data { text-align: center; color: #999; padding: 50px; }
     </style>
 </head>
 <body>
-    <div class="box">
+    <div class="container">
+        <a href="/" class="btn-back">← Quay lại danh sách bài học</a>
         <h1><%= lesson.title %></h1>
-        <p style="font-size: 20px; color: #555;"><%= lesson.desc %></p>
-        <hr>
-        <p>Nội dung bài học Unit <%= lesson.id %> đang được biên soạn...</p>
-        <br>
-        <a href="/" class="back">← Quay lại trang chủ</a>
+        <p><em>Chủ đề: <%= lesson.desc %></em></p>
+
+        <% if (questions && questions.length > 0) { %>
+            <form id="quiz-form">
+                <% questions.forEach((q, index) => { %>
+                    <div class="q-card">
+                        <span class="question-text"><%= index + 1 %>. <%= q.question || q.text %></span>
+                        <div class="options">
+                            <% q.options.forEach((opt, optIndex) => { %>
+                                <label class="option">
+                                    <input type="radio" name="q<%= index %>" value="<%= optIndex %>" required>
+                                    <%= opt %>
+                                </label>
+                            <% }) %>
+                        </div>
+                    </div>
+                <% }) %>
+                <button type="button" class="submit-btn" onclick="alert('Hệ thống đã ghi nhận kết quả bài làm của bạn!')">Nộp bài tập</button>
+            </form>
+        <% } else { %>
+            <div class="no-data">
+                <h3>Chưa có câu hỏi cho bài học này.</h3>
+                <p>Vui lòng kiểm tra lại file data/units.json</p>
+            </div>
+        <% } %>
     </div>
 </body>
 </html>
