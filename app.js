@@ -6,25 +6,24 @@ const ejs = require('ejs');
 
 const app = express();
 
-// --- 1. KẾT NỐI DATABASE ---
+// 1. KẾT NỐI DATABASE
 const mongoURI = process.env.MONGO_URI; 
 mongoose.connect(mongoURI)
-    .then(() => console.log('✅ Kết nối Database thành công!'))
-    .catch(err => console.error('❌ Lỗi kết nối DB:', err));
+    .then(() => console.log('✅ DB Connected'))
+    .catch(err => console.error('❌ DB Error:', err));
 
-// Model Người dùng
 const User = mongoose.model('User', new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     createdAt: { type: Date, default: Date.now }
 }));
 
-// --- 2. CẤU HÌNH ---
+// 2. CẤU HÌNH
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 app.use(session({
-    secret: 'phap_anh_8_key_2026',
+    secret: 'phap_anh_8_key',
     resave: false,
     saveUninitialized: true
 }));
@@ -33,7 +32,6 @@ app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
 
-// Dữ liệu 12 Units bài học
 const lessonsData = [
     { id: 1, title: "Unit 1: Leisure Activities", desc: "Hoạt động giải trí" },
     { id: 2, title: "Unit 2: Life in the Countryside", desc: "Nông thôn" },
@@ -49,53 +47,50 @@ const lessonsData = [
     { id: 12, title: "Unit 12: Life on other planets", desc: "Sự sống hành tinh khác" }
 ];
 
-// --- 3. ROUTES ---
-
-// Trang chủ
+// 3. ROUTES
 app.get('/', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     res.render('index', { user: req.session.user, lessons: lessonsData });
 });
 
-// Chi tiết bài học
 app.get('/study/:id', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const lesson = lessonsData.find(l => l.id == req.params.id);
-    if (!lesson) return res.redirect('/');
     res.render('study', { user: req.session.user, lesson: lesson });
 });
 
-// Đăng ký (Tự động đăng nhập)
 app.get('/register', (req, res) => res.render('register'));
-
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     try {
-        const check = await User.findOne({ username });
-        if (check) return res.send("<script>alert('Tài khoản đã tồn tại!'); window.location.href='/register';</script>");
-        
         const newUser = await User.create({ username, password });
         req.session.user = { username: newUser.username, role: 'user' };
         res.redirect('/');
-    } catch (e) { 
-        res.send("<script>alert('Lỗi đăng ký!'); window.location.href='/register';</script>"); 
-    }
+    } catch (e) { res.send("<script>alert('Lỗi đăng ký!'); window.location.href='/register';</script>"); }
 });
 
-// Đăng nhập
 app.get('/login', (req, res) => res.render('login'));
-
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    // Admin (Pass: 080212)
     if (username === 'admin' && password === '080212') {
         req.session.user = { username: 'admin', role: 'admin' };
         return res.redirect('/admin');
     }
-    try {
-        const found = await User.findOne({ username, password });
-        if (found) {
-            req.session.user = { username: found.username, role: 'user' };
-            return res.redirect('/');
-        }
-        res.send("<script
+    const found = await User.findOne({ username, password });
+    if (found) {
+        req.session.user = { username: found.username, role: 'user' };
+        return res.redirect('/');
+    }
+    res.send("<script>alert('Sai thông tin!'); window.location.href='/login';</script>");
+});
+
+app.get('/admin', async (req, res) => {
+    if (!req.session.user || req.session.user.username !== 'admin') return res.redirect('/login');
+    const users = await User.find().sort({ createdAt: -1 });
+    res.render('admin', { user: req.session.user, usersList: users });
+});
+
+app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/login'); });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));
