@@ -24,7 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 app.use(session({
-    secret: 'phap_anh_8_key',
+    secret: 'phap_anh_8_key_2026',
     resave: false,
     saveUninitialized: true
 }));
@@ -61,22 +61,41 @@ app.get('/', (req, res) => {
 app.get('/study/:id', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const lesson = lessonsData.find(l => l.id == req.params.id);
+    if (!lesson) return res.redirect('/');
     res.render('study', { user: req.session.user, lesson: lesson });
 });
 
 // Đăng ký (Tự động đăng nhập)
 app.get('/register', (req, res) => res.render('register'));
+
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     try {
+        const check = await User.findOne({ username });
+        if (check) return res.send("<script>alert('Tài khoản đã tồn tại!'); window.location.href='/register';</script>");
+        
         const newUser = await User.create({ username, password });
         req.session.user = { username: newUser.username, role: 'user' };
         res.redirect('/');
-    } catch (e) { res.send("<script>alert('Lỗi hoặc trùng tên!'); window.location.href='/register';</script>"); }
+    } catch (e) { 
+        res.send("<script>alert('Lỗi đăng ký!'); window.location.href='/register';</script>"); 
+    }
 });
 
 // Đăng nhập
 app.get('/login', (req, res) => res.render('login'));
+
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    if (username === 'admin' && password === '080212')
+    // Admin (Pass: 080212)
+    if (username === 'admin' && password === '080212') {
+        req.session.user = { username: 'admin', role: 'admin' };
+        return res.redirect('/admin');
+    }
+    try {
+        const found = await User.findOne({ username, password });
+        if (found) {
+            req.session.user = { username: found.username, role: 'user' };
+            return res.redirect('/');
+        }
+        res.send("<script
