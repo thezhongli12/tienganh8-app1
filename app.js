@@ -10,9 +10,10 @@ const app = express();
 // --- 1. KẾT NỐI DATABASE ---
 const mongoURI = process.env.MONGO_URI; 
 mongoose.connect(mongoURI)
-    .then(() => console.log('✅ Kết nối MongoDB thành công'))
-    .catch(err => console.error('❌ Lỗi DB:', err));
+    .then(() => console.log('✅ Đã kết nối MongoDB'))
+    .catch(err => console.error('❌ Lỗi kết nối DB:', err));
 
+// Định nghĩa Models
 const User = mongoose.model('User', new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
@@ -42,49 +43,45 @@ app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
 
 const lessonsData = [
-    { id: 1, title: "Unit 1: Leisure Activities", desc: "Giải trí" },
+    { id: 1, title: "Unit 1: Leisure Activities", desc: "Hoạt động giải trí" },
     { id: 2, title: "Unit 2: Life in the Countryside", desc: "Nông thôn" },
-    { id: 3, title: "Unit 3: Teenagers", desc: "Thiếu niên" },
-    { id: 4, title: "Unit 4: Ethnic Groups of VN", desc: "Dân tộc" },
-    { id: 5, title: "Unit 5: Our Customs", desc: "Phong tục" },
+    { id: 3, title: "Unit 3: Teenagers", desc: "Tuổi thiếu niên" },
+    { id: 4, title: "Unit 4: Ethnic Groups of VN", desc: "Dân tộc Việt Nam" },
+    { id: 5, title: "Unit 5: Our Customs", desc: "Phong tục tập quán" },
     { id: 6, title: "Unit 6: Lifestyles", desc: "Lối sống" },
-    { id: 7, title: "Unit 7: Environmental Protection", desc: "Môi trường" },
+    { id: 7, title: "Unit 7: Environmental Protection", desc: "Bảo vệ môi trường" },
     { id: 8, title: "Unit 8: Shopping", desc: "Mua sắm" },
     { id: 9, title: "Unit 9: Natural Disasters", desc: "Thiên tai" },
     { id: 10, title: "Unit 10: Communication", desc: "Giao tiếp" },
-    { id: 11, title: "Unit 11: Science and Tech", desc: "Khoa học" },
-    { id: 12, title: "Unit 12: Life on other planets", desc: "Vũ trụ" }
+    { id: 11, title: "Unit 11: Science and Tech", desc: "Khoa học công nghệ" },
+    { id: 12, title: "Unit 12: Life on other planets", desc: "Sự sống hành tinh khác" }
 ];
 
 // --- 3. ROUTES ---
 
+// Trang chủ
 app.get('/', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     res.render('index', { user: req.session.user, lessons: lessonsData });
 });
 
-// ĐĂNG KÝ
+// Đăng ký (Tên >= 6, MK >= 8)
 app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
-    const userRegex = /^[a-zA-Z0-9]{1,6}$/;
+    const userRegex = /^[a-zA-Z0-9]{6,}$/; // Chỉ chữ/số, không dấu/cách, tối thiểu 6 ký tự
 
-    // Kiểm tra định dạng tên
     if (!userRegex.test(username)) {
-        return res.render('register', { error: 'Tên tối đa 6 ký tự, không dấu, không cách!' });
+        return res.render('register', { error: 'Tên đăng nhập phải ít nhất 6 ký tự, không dấu, không cách!' });
     }
-    // Kiểm tra độ dài mật khẩu
-    if (password.length > 8) {
-        return res.render('register', { error: 'Mật khẩu tối đa 8 ký tự!' });
+    if (password.length < 8) {
+        return res.render('register', { error: 'Mật khẩu phải có ít nhất 8 ký tự!' });
     }
 
     try {
-        // Kiểm tra xem tên đã tồn tại chưa
-        const existingUser = await User.findOne({ username });
-        if (existingUser) {
-            return res.render('register', { error: 'Tên đăng nhập này đã được sử dụng!' });
-        }
-
+        const checkUser = await User.findOne({ username });
+        if (checkUser) return res.render('register', { error: 'Tên đăng nhập này đã tồn tại!' });
+        
         await User.create({ username, password });
         res.redirect('/login');
     } catch (e) {
@@ -92,7 +89,7 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// ĐĂNG NHẬP
+// Đăng nhập
 app.get('/login', (req, res) => res.render('login', { error: null }));
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -108,7 +105,7 @@ app.post('/login', async (req, res) => {
     res.render('login', { error: 'Sai tên đăng nhập hoặc mật khẩu!' });
 });
 
-// HỌC TẬP & LƯU ĐIỂM
+// Trang học & Lưu điểm
 app.get('/study/:id', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const lessonId = req.params.id;
@@ -127,7 +124,7 @@ app.post('/save-score', async (req, res) => {
     res.json({ success: true });
 });
 
-// ADMIN
+// Admin
 app.get('/admin', async (req, res) => {
     if (!req.session.user || req.session.user.username !== 'admin') return res.redirect('/login');
     const users = await User.find().sort({ createdAt: -1 });
@@ -137,4 +134,4 @@ app.get('/admin', async (req, res) => {
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/login'); });
 
-app.listen(3000, () => console.log('🚀 Server ON: http://localhost:3000'));
+app.listen(3000, () => console.log('🚀 Server: http://localhost:3000'));
