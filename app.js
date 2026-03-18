@@ -7,7 +7,7 @@ const fs = require('fs');
 
 const app = express();
 
-// --- 1. KẾT NỐI DATABASE ---
+// --- 1. KẾT NỐI DATABASE (Thay MONGO_URI bằng link của bạn) ---
 const mongoURI = process.env.MONGO_URI; 
 mongoose.connect(mongoURI)
     .then(() => console.log('✅ Kết nối Database thành công!'))
@@ -33,7 +33,7 @@ app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
 
-// Danh sách 12 Units cố định cho Trang Chủ
+// Danh sách hiển thị trang chủ
 const lessonsData = [
     { id: 1, title: "Unit 1: Leisure Activities", desc: "Hoạt động giải trí" },
     { id: 2, title: "Unit 2: Life in the Countryside", desc: "Nông thôn" },
@@ -51,57 +51,52 @@ const lessonsData = [
 
 // --- 3. ROUTES ---
 
-// TRANG CHỦ
 app.get('/', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     res.render('index', { user: req.session.user, lessons: lessonsData });
 });
 
-// CHI TIẾT BÀI HỌC (Lấy câu hỏi từ units.json)
+// ROUTE STUDY: Đọc dữ liệu từ units.json
 app.get('/study/:id', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     
-    const lessonId = parseInt(req.params.id);
-    const lessonInfo = lessonsData.find(l => l.id === lessonId);
+    const lessonId = req.params.id;
+    const lessonInfo = lessonsData.find(l => l.id == lessonId);
 
     try {
-        // Tìm đường dẫn file JSON chính xác
         const filePath = path.join(__dirname, 'data', 'units.json');
-        
         if (fs.existsSync(filePath)) {
             const rawData = fs.readFileSync(filePath, 'utf8');
-            const allUnitsData = JSON.parse(rawData);
+            const allData = JSON.parse(rawData);
 
-            // Tìm Unit trong file JSON (kiểm tra cả trường id và unit)
-            const unitData = allUnitsData.find(u => (u.id == lessonId || u.unit == lessonId));
+            // Tìm key theo định dạng "unit1", "unit2"... trong file của bạn
+            const unitKey = 'unit' + lessonId; 
+            const unitContent = allData[unitKey];
 
             res.render('study', { 
                 user: req.session.user, 
                 lesson: lessonInfo, 
-                questions: unitData ? (unitData.questions || []) : [] 
+                questions: (unitContent && unitContent.questions) ? unitContent.questions : [] 
             });
         } else {
-            console.log("⚠️ Không tìm thấy file units.json tại:", filePath);
             res.render('study', { user: req.session.user, lesson: lessonInfo, questions: [] });
         }
     } catch (err) {
-        console.error("❌ Lỗi xử lý dữ liệu:", err);
+        console.error("Lỗi đọc JSON:", err);
         res.render('study', { user: req.session.user, lesson: lessonInfo, questions: [] });
     }
 });
 
-// ĐĂNG KÝ (Tự động đăng nhập)
 app.get('/register', (req, res) => res.render('register'));
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     try {
-        const newUser = await User.create({ username, password });
-        req.session.user = { username: newUser.username, role: 'user' };
+        await User.create({ username, password });
+        req.session.user = { username, role: 'user' };
         res.redirect('/');
-    } catch (e) { res.send("<script>alert('Lỗi: Trùng tên hoặc Database lỗi!'); window.location.href='/register';</script>"); }
+    } catch (e) { res.send("<script>alert('Lỗi đăng ký!'); window.location.href='/register';</script>"); }
 });
 
-// ĐĂNG NHẬP (Admin pass: 080212)
 app.get('/login', (req, res) => res.render('login'));
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -117,7 +112,6 @@ app.post('/login', async (req, res) => {
     res.send("<script>alert('Sai thông tin!'); window.location.href='/login';</script>");
 });
 
-// ADMIN (Xem người dùng)
 app.get('/admin', async (req, res) => {
     if (!req.session.user || req.session.user.username !== 'admin') return res.redirect('/login');
     const users = await User.find().sort({ createdAt: -1 });
@@ -126,6 +120,5 @@ app.get('/admin', async (req, res) => {
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/login'); });
 
-// --- 4. KHỞI CHẠY ---
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server đang chạy tại cổng ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
