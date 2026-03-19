@@ -11,15 +11,16 @@ const app = express();
 const mongoURI = process.env.MONGO_URI; 
 mongoose.connect(mongoURI)
     .then(() => console.log('✅ Đã kết nối MongoDB'))
-    .catch(err => console.error('❌ Lỗi kết nối DB:', err));
+    .catch(err => console.error('❌ Lỗi DB:', err));
 
-// Định nghĩa Models
+// Schema Người dùng
 const User = mongoose.model('User', new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     createdAt: { type: Date, default: Date.now }
 }));
 
+// Schema Lưu điểm số
 const Score = mongoose.model('Score', new mongoose.Schema({
     username: String,
     lessonTitle: String,
@@ -59,17 +60,16 @@ const lessonsData = [
 
 // --- 3. ROUTES ---
 
-// Trang chủ
 app.get('/', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     res.render('index', { user: req.session.user, lessons: lessonsData });
 });
 
-// Đăng ký (Tên >= 6, MK >= 8)
+// ĐĂNG KÝ (SỬA ĐỔI: TỰ ĐỘNG ĐĂNG NHẬP)
 app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
-    const userRegex = /^[a-zA-Z0-9]{6,}$/; // Chỉ chữ/số, không dấu/cách, tối thiểu 6 ký tự
+    const userRegex = /^[a-zA-Z0-9]{6,}$/; // Ít nhất 6 ký tự, không dấu/cách
 
     if (!userRegex.test(username)) {
         return res.render('register', { error: 'Tên đăng nhập phải ít nhất 6 ký tự, không dấu, không cách!' });
@@ -80,16 +80,20 @@ app.post('/register', async (req, res) => {
 
     try {
         const checkUser = await User.findOne({ username });
-        if (checkUser) return res.render('register', { error: 'Tên đăng nhập này đã tồn tại!' });
+        if (checkUser) return res.render('register', { error: 'Tên đăng nhập đã tồn tại!' });
         
-        await User.create({ username, password });
-        res.redirect('/login');
+        const newUser = await User.create({ username, password });
+        
+        // TỰ ĐỘNG ĐĂNG NHẬP SAU KHI ĐĂNG KÝ
+        req.session.user = { username: newUser.username };
+        res.redirect('/'); 
+
     } catch (e) {
-        res.render('register', { error: 'Lỗi hệ thống, vui lòng thử lại!' });
+        res.render('register', { error: 'Lỗi hệ thống, thử lại sau!' });
     }
 });
 
-// Đăng nhập
+// ĐĂNG NHẬP
 app.get('/login', (req, res) => res.render('login', { error: null }));
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -105,7 +109,7 @@ app.post('/login', async (req, res) => {
     res.render('login', { error: 'Sai tên đăng nhập hoặc mật khẩu!' });
 });
 
-// Trang học & Lưu điểm
+// TRANG HỌC & LƯU ĐIỂM
 app.get('/study/:id', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const lessonId = req.params.id;
@@ -124,7 +128,7 @@ app.post('/save-score', async (req, res) => {
     res.json({ success: true });
 });
 
-// Admin
+// ADMIN
 app.get('/admin', async (req, res) => {
     if (!req.session.user || req.session.user.username !== 'admin') return res.redirect('/login');
     const users = await User.find().sort({ createdAt: -1 });
@@ -134,4 +138,4 @@ app.get('/admin', async (req, res) => {
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/login'); });
 
-app.listen(3000, () => console.log('🚀 Server: http://localhost:3000'));
+app.listen(3000, () => console.log('🚀 Server ON: http://localhost:3000'));
