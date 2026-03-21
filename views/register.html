@@ -2,114 +2,36 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng Ký - Tiếng Anh 8</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .register-container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 350px;
-            text-align: center;
-        }
-        h2 { color: #28a745; margin-bottom: 20px; }
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: 0.3s;
-        }
-        button:hover { background-color: #218838; }
-        .switch {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #666;
-        }
-        /* QUAN TRỌNG: Đường dẫn quay lại Login */
-        .switch a { color: #28a745; text-decoration: none; font-weight: bold; }
+        body { font-family: 'Arial', sans-serif; background: #eef2f7; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #2196F3; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .link { margin-top: 15px; font-size: 14px; }
+        .link a { color: #4CAF50; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
-
-<div class="register-container">
-    <h2>ĐĂNG KÝ</h2>
-    <input type="text" id="regUser" placeholder="Tên đăng nhập mới" required>
-    <input type="password" id="regPass" placeholder="Mật khẩu" required>
-    <input type="password" id="confirmPass" placeholder="Xác nhận mật khẩu" required>
-    <button onclick="handleRegister()">Tạo Tài Khoản</button>
-    
-    <div class="switch">
-        Đã có tài khoản? <a href="./login.html">Đăng nhập ngay</a>
+    <div class="box">
+        <h2>ĐĂNG KÝ</h2>
+        <input type="text" id="ru" placeholder="Tên đăng nhập mới">
+        <input type="password" id="rp" placeholder="Mật khẩu">
+        <button onclick="doReg()">TẠO TÀI KHOẢN</button>
+        <div class="link">Đã có tài khoản? <a href="./login.html">Đăng nhập</a></div>
     </div>
-</div>
 
-<script>
-    function handleRegister() {
-        const user = document.getElementById('regUser').value.trim();
-        const pass = document.getElementById('regPass').value.trim();
-        const confirm = document.getElementById('confirmPass').value.trim();
+    <script>
+        function doReg() {
+            const u = document.getElementById('ru').value.trim();
+            const p = document.getElementById('rp').value.trim();
+            if(!u || !p) return alert("Vui lòng nhập đủ!");
+            if(localStorage.getItem(u)) return alert("Tên này đã có người dùng!");
 
-        // Kiểm tra nhập liệu trống
-        if (!user || !pass || !confirm) {
-            alert("Vui lòng không để trống thông tin!");
-            return;
+            localStorage.setItem(u, JSON.stringify({password: p}));
+            alert("Đăng ký xong! Hãy đăng nhập.");
+            window.location.href = './login.html';
         }
-
-        // Kiểm tra khớp mật khẩu
-        if (pass !== confirm) {
-            alert("Mật khẩu xác nhận không khớp!");
-            return;
-        }
-
-        // Kiểm tra tài khoản đã tồn tại
-        if (localStorage.getItem(user)) {
-            alert("Tên đăng nhập này đã được sử dụng!");
-            return;
-        }
-
-        // Lưu dữ liệu vào LocalStorage
-        const userData = {
-            password: pass,
-            created: new Date().toISOString()
-        };
-
-        localStorage.setItem(user, JSON.stringify(userData));
-        
-        alert("Chúc mừng! Bạn đã đăng ký thành công.");
-        // Chuyển hướng về trang đăng nhập cùng thư mục
-        window.location.href = './login.html';
-    }
-
-    // Hỗ trợ nhấn phím Enter
-    document.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            handleRegister();
-        }
-    });
-</script>
-
+    </script>
 </body>
 </html>
