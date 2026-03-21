@@ -5,110 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng Nhập - Tiếng Anh 8</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .login-container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 350px;
-            text-align: center;
-        }
-        h2 { color: #1a73e8; margin-bottom: 20px; }
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: 0.3s;
-        }
-        button:hover { background-color: #1557b0; }
-        .switch {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #666;
-        }
-        .switch a { color: #1a73e8; text-decoration: none; font-weight: bold; }
+        body { font-family: 'Arial', sans-serif; background: #eef2f7; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        h2 { color: #333; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button:hover { background: #45a049; }
+        .link { margin-top: 15px; font-size: 14px; }
+        .link a { color: #2196F3; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
-
-<div class="login-container">
-    <h2>ĐĂNG NHẬP</h2>
-    <input type="text" id="username" placeholder="Tên đăng nhập" required>
-    <input type="password" id="password" placeholder="Mật khẩu" required>
-    <button onclick="handleLogin()">Đăng Nhập</button>
-    
-    <div class="switch">
-        Chưa có tài khoản? <a href="./register.html">Đăng ký ngay</a>
+    <div class="box">
+        <h2>ĐĂNG NHẬP</h2>
+        <input type="text" id="u" placeholder="Tên đăng nhập">
+        <input type="password" id="p" placeholder="Mật khẩu">
+        <button onclick="doLogin()">VÀO HỌC</button>
+        <div class="link">Chưa có tài khoản? <a href="./register.html">Đăng ký ngay</a></div>
     </div>
-</div>
 
-<script>
-    function handleLogin() {
-        const userInp = document.getElementById('username').value.trim();
-        const passInp = document.getElementById('password').value.trim();
+    <script>
+        function doLogin() {
+            const user = document.getElementById('u').value.trim();
+            const pass = document.getElementById('p').value.trim();
 
-        if (!userInp || !passInp) {
-            alert("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!");
-            return;
-        }
-
-        // 1. Kiểm tra tài khoản Admin (Mật khẩu bạn lưu: 080212)
-        if (userInp === 'admin' && passInp === '080212') {
-            localStorage.setItem('currentUser', 'Admin');
-            alert("Chào Admin! Đang chuyển hướng...");
-            window.location.href = './index.html';
-            return;
-        }
-
-        // 2. Lấy dữ liệu từ localStorage
-        const storedData = localStorage.getItem(userInp);
-
-        if (storedData) {
-            const userData = JSON.parse(storedData);
-            
-            if (userData.password === passInp) {
-                localStorage.setItem('currentUser', userInp);
-                alert("Đăng nhập thành công!");
+            if(user === 'admin' && pass === '080212') {
+                localStorage.setItem('currentUser', 'Admin');
                 window.location.href = './index.html';
-            } else {
-                // Báo lỗi khi sai mật khẩu
-                alert("Sai mật khẩu! Vui lòng thử lại.");
+                return;
             }
-        } else {
-            // Báo lỗi khi không tìm thấy tên đăng nhập
-            alert("Tài khoản này chưa được đăng ký!");
-        }
-    }
 
-    // Hỗ trợ bấm Enter để đăng nhập nhanh
-    document.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            handleLogin();
+            const data = localStorage.getItem(user);
+            if(data) {
+                const info = JSON.parse(data);
+                if(info.password === pass) {
+                    localStorage.setItem('currentUser', user);
+                    window.location.href = './index.html';
+                } else alert("Sai mật khẩu!");
+            } else alert("Tài khoản không tồn tại!");
         }
-    });
-</script>
-
+    </script>
 </body>
 </html>
