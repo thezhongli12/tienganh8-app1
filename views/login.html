@@ -3,65 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Nhập - Tiếng Anh 8</title>
+    <title>Đăng nhập - Tiếng Anh 8</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 350px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
-        .switch { margin-top: 15px; font-size: 14px; }
-        .switch a { color: #1a73e8; text-decoration: none; font-weight: bold; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .login-card { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            width: 100%; 
+            max-width: 350px; 
+            text-align: center; 
+        }
+        h2 { color: #333; margin-bottom: 25px; font-size: 24px; }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            outline: none; 
+            transition: 0.3s; 
+        }
+        input:focus { 
+            border-color: #667eea; 
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.3); 
+        }
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background: #667eea; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: bold; 
+            transition: 0.3s; 
+            margin-top: 10px; 
+        }
+        button:hover { 
+            background: #5a67d8; 
+            transform: translateY(-2px); 
+        }
+        .footer-links { 
+            margin-top: 25px; 
+            font-size: 14px; 
+            color: #666; 
+        }
+        .footer-links a { 
+            color: #667eea; 
+            text-decoration: none; 
+            font-weight: bold; 
+        }
+        .footer-links a:hover { 
+            text-decoration: underline; 
+        }
     </style>
 </head>
 <body>
     <div class="login-card">
-        <h2>ĐĂNG NHẬP</h2>
-        <input type="text" id="user" placeholder="Tên đăng nhập">
-        <input type="password" id="pass" placeholder="Mật khẩu">
-        <button onclick="handleLogin()">ĐĂNG NHẬP</button>
-        <div class="switch">Chưa có tài khoản? <a href="./register.html">Đăng ký ngay</a></div>
+        <h2>ENGLISH 8</h2>
+        <form action="/login" method="POST">
+            <input type="text" name="username" placeholder="Tên đăng nhập" required>
+            <input type="password" name="password" placeholder="Mật khẩu" required>
+            <button type="submit">Đăng nhập ngay</button>
+        </form>
+        
+        <div class="footer-links">
+            Chưa có tài khoản? <a href="/register">Đăng ký thành viên</a>
+        </div>
     </div>
-
-    <script>
-        function handleLogin() {
-            const u = document.getElementById('user').value.trim();
-            const p = document.getElementById('pass').value.trim();
-
-            if(!u || !p) return alert("Vui lòng nhập đủ thông tin!");
-
-            // 1. Kiểm tra Admin (Mật khẩu: 080212)
-            if(u === 'admin' && p === '080212') {
-                localStorage.setItem('currentUser', 'Admin');
-                window.location.href = './index.html'; 
-                return;
-            }
-
-            // 2. Lấy dữ liệu tài khoản
-            const rawData = localStorage.getItem(u);
-            if(!rawData) return alert("Tài khoản này không tồn tại!");
-
-            try {
-                const userData = JSON.parse(rawData);
-                // Kiểm tra nếu userData là object (mới) hoặc chỉ là chuỗi pass (cũ)
-                const storedPass = (typeof userData === 'object') ? userData.password : userData;
-
-                if(storedPass === p) {
-                    localStorage.setItem('currentUser', u);
-                    alert("Đăng nhập thành công!");
-                    window.location.href = './index.html'; 
-                } else {
-                    alert("Sai mật khẩu!");
-                }
-            } catch (e) {
-                // Nếu dữ liệu cũ không phải JSON, thử so sánh trực tiếp
-                if(rawData === p) {
-                    localStorage.setItem('currentUser', u);
-                    window.location.href = './index.html';
-                } else {
-                    alert("Lỗi dữ liệu tài khoản hoặc sai mật khẩu!");
-                }
-            }
-        }
-    </script>
 </body>
 </html>
