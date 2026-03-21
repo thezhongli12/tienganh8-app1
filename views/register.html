@@ -1,32 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Đăng ký</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký - Hệ Thống Học Tập</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
-        .box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 320px; }
-        input { width: 100%; padding: 12px; margin: 10px 0 5px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .error { color: #e74c3c; font-size: 13px; font-weight: bold; text-align: center; margin: 10px 0; }
-        button { width: 100%; padding: 12px; background: #2ecc71; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .register-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 350px;
+            text-align: center;
+        }
+        h2 { color: #28a745; margin-bottom: 20px; }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        button:hover { background-color: #218838; }
+        .switch {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+        .switch a { color: #28a745; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h2 style="text-align: center;">Đăng ký</h2>
-        <form action="/register" method="POST">
-            <span style="font-size: 11px; color: gray;">* Tên đăng nhập (Ít nhất 6 ký tự)</span>
-            <input type="text" name="username" placeholder="Username" minlength="6" required>
-            
-            <span style="font-size: 11px; color: gray;">* Mật khẩu (Ít nhất 8 ký tự)</span>
-            <input type="password" name="password" placeholder="Password" minlength="8" required>
 
-            <% if (locals.error) { %>
-                <div class="error">⚠️ <%= error %></div>
-            <% } %>
-
-            <button type="submit">Đăng ký & Vào học</button>
-        </form>
+<div class="register-container">
+    <h2>ĐĂNG KÝ</h2>
+    <input type="text" id="regUser" placeholder="Tên đăng nhập mới" required>
+    <input type="password" id="regPass" placeholder="Mật khẩu" required>
+    <input type="password" id="confirmPass" placeholder="Xác nhận mật khẩu" required>
+    <button onclick="handleRegister()">Tạo Tài Khoản</button>
+    
+    <div class="switch">
+        Đã có tài khoản? <a href="login.html">Đăng nhập</a>
     </div>
+</div>
+
+<script>
+    function handleRegister() {
+        const user = document.getElementById('regUser').value.trim();
+        const pass = document.getElementById('regPass').value.trim();
+        const confirm = document.getElementById('confirmPass').value.trim();
+
+        if (!user || !pass || !confirm) {
+            alert("Vui lòng nhập đầy đủ thông tin!");
+            return;
+        }
+
+        if (pass !== confirm) {
+            alert("Mật khẩu xác nhận không khớp!");
+            return;
+        }
+
+        // Kiểm tra xem tài khoản đã tồn tại chưa
+        if (localStorage.getItem(user)) {
+            alert("Tên đăng nhập này đã có người sử dụng!");
+            return;
+        }
+
+        // Lưu thông tin (với mật khẩu admin mặc định bạn lưu là 080212)
+        const userData = {
+            password: pass,
+            joinedDate: new Date().toLocaleDateString()
+        };
+
+        localStorage.setItem(user, JSON.stringify(userData));
+        alert("Đăng ký thành công! Bạn có thể đăng nhập ngay.");
+        window.location.href = 'login.html';
+    }
+</script>
+
 </body>
 </html>
