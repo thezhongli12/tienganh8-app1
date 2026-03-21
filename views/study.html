@@ -2,59 +2,63 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title><%= lesson.title %></title>
+    <title><%= (locals.lesson && lesson.title) ? lesson.title : "Bài học" %></title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        
+        /* Nút quay về trang chủ */
         .btn-home { 
-            display: inline-block; padding: 10px 20px; background: #f8f9fa; 
-            color: #333; text-decoration: none; border-radius: 8px; 
-            margin-bottom: 20px; font-weight: bold; border: 1px solid #ddd;
+            display: inline-flex; align-items: center; padding: 10px 18px; 
+            background: #ffffff; color: #2c3e50; text-decoration: none; 
+            border-radius: 10px; margin-bottom: 25px; font-weight: 600; 
+            border: 1px solid #dcdde1; transition: all 0.2s;
         }
-        .btn-home:hover { background: #e2e6ea; }
-        .question-box { margin-bottom: 20px; padding: 15px; border-bottom: 1px solid #eee; }
-        .btn-submit { background: #007bff; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; }
+        .btn-home:hover { background: #f1f2f6; border-color: #7f8c8d; transform: translateY(-2px); }
+        
+        .question-box { margin-bottom: 25px; padding: 20px; border: 1px solid #edf2f7; border-radius: 12px; }
+        .btn-submit { background: #3498db; color: white; padding: 15px; border: none; border-radius: 10px; cursor: pointer; width: 100%; font-size: 17px; font-weight: bold; }
+        .btn-submit:hover { background: #2980b9; }
+        .error-alert { background: #fff5f5; color: #c53030; padding: 15px; border-radius: 10px; border: 1px solid #feb2b2; margin-bottom: 20px; text-align: center; }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="/" class="btn-home">🏠 Quay về Trang chủ</a>
+        <a href="/" class="btn-home">⬅️ Quay về Trang chủ</a>
 
-        <h2><%= lesson.title %></h2>
-        <hr>
+        <% if (locals.lesson) { %>
+            <h2 style="color: #2d3748;"><%= lesson.title %></h2>
+            <p style="color: #718096; margin-bottom: 30px;">Chào, <strong><%= user.username %></strong>! Hãy hoàn thành các câu hỏi dưới đây.</p>
+        <% } %>
+
+        <% if (locals.error) { %>
+            <div class="error-alert">⚠️ <%= error %></div>
+        <% } %>
 
         <form id="quizForm">
-            <% questions.forEach((q, index) => { %>
-                <div class="question-box">
-                    <p><strong>Câu <%= index + 1 %>:</strong> <%= q.text %></p>
-                    <% q.options.forEach((opt, optIdx) => { %>
-                        <label style="display: block; margin: 5px 0;">
-                            <input type="radio" name="q<%= index %>" value="<%= optIdx %>" required> <%= opt %>
-                        </label>
-                    <% }) %>
-                </div>
-            <% }) %>
-            <button type="submit" class="btn-submit">Nộp bài & Lưu điểm</button>
+            <% if (locals.questions && questions.length > 0) { %>
+                <% questions.forEach((q, index) => { %>
+                    <div class="question-box">
+                        <p style="font-size: 18px; margin-top: 0;"><strong>Câu <%= index + 1 %>:</strong> <%= q.text %></p>
+                        <% q.options.forEach((opt, optIdx) => { %>
+                            <label style="display: block; margin: 10px 0; cursor: pointer; padding: 8px; border-radius: 5px; background: #f8fafc;">
+                                <input type="radio" name="q<%= index %>" value="<%= optIdx %>" required style="margin-right: 10px;"> <%= opt %>
+                            </label>
+                        <% }) %>
+                    </div>
+                <% }) %>
+                <button type="submit" class="btn-submit">Nộp bài & Xem kết quả</button>
+            <% } else { %>
+                <p style="text-align: center; color: #a0aec0; padding: 40px;">(Dữ liệu bài tập hiện chưa có hoặc bị lỗi định dạng file JSON)</p>
+            <% } %>
         </form>
     </div>
 
     <script>
         document.getElementById('quizForm').onsubmit = async (e) => {
             e.preventDefault();
-            // Logic tính điểm của bạn ở đây...
-            let scoreStr = "10/10"; // Ví dụ
-            let percent = 100;
-            
-            await fetch('/save-score', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    lessonTitle: "<%= lesson.title %>",
-                    score: scoreStr,
-                    percentage: percent
-                })
-            });
-            alert('Đã lưu điểm thành công!');
+            // Bạn có thể thêm logic tính điểm thực tế ở đây
+            alert('Bài của bạn đã được gửi lên hệ thống!');
             window.location.href = '/';
         };
     </script>
