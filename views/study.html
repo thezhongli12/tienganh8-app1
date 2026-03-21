@@ -1,74 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title><%= lesson.title %></title>
+    <title>Luyện Tập - Tiếng Anh 8</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .btn-home { 
-            display: inline-block; padding: 10px 15px; background: #fff; color: #333; 
-            text-decoration: none; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 20px; font-weight: bold;
-        }
-        .btn-home:hover { background: #eee; }
-        .question-box { margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 10px; }
-        .btn-submit { background: #3498db; color: white; padding: 15px; border: none; border-radius: 10px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; }
+        .quiz-container { max-width: 600px; margin: 50px auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .question { font-size: 20px; font-weight: bold; margin-bottom: 20px; }
+        .btn-option { display: block; width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; text-align: left; }
+        .btn-option:hover { background: #f0f0f0; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <a href="/" class="btn-home">🏠 Quay về Trang chủ</a>
-        <h2><%= lesson.title %></h2>
-        <p>Học sinh: <strong><%= user.username %></strong></p>
-        <hr>
-
-        <form id="quizForm">
-            <% if (questions && questions.length > 0) { %>
-                <% questions.forEach((q, index) => { %>
-                    <div class="question-box">
-                        <p><strong>Câu <%= index + 1 %>:</strong> <%= q.text %></p>
-                        
-                        <% if (q.options && q.options.length > 0) { %>
-                            <% q.options.forEach((opt, optIdx) => { %>
-                                <label style="display: block; margin: 8px 0;">
-                                    <input type="radio" name="q<%= index %>" value="<%= optIdx %>" required> <%= opt %>
-                                </label>
-                            <% }) %>
-                        <% } else { %>
-                            <p style="color: red;">⚠️ Lỗi: Câu hỏi này thiếu lựa chọn đáp án trong dữ liệu.</p>
-                        <% } %>
-                    </div>
-                <% }) %>
-                <button type="submit" class="btn-submit">Nộp bài & Lưu kết quả</button>
-            <% } else { %>
-                <p style="text-align: center; color: #7f8c8d;">Hiện chưa có câu hỏi cho bài học này.</p>
-            <% } %>
-        </form>
+    <div class="quiz-container">
+        <div id="question" class="question">Đang tải câu hỏi...</div>
+        <div id="options"></div>
     </div>
 
     <script>
-        const questionsData = <%- JSON.stringify(questions) %>;
-        document.getElementById('quizForm').onsubmit = async (e) => {
-            e.preventDefault();
-            let scoreCount = 0;
-            questionsData.forEach((q, i) => {
-                const selected = document.querySelector(`input[name="q${i}"]:checked`);
-                if (selected && parseInt(selected.value) === q.correct) scoreCount++;
-            });
+        let questions = []; // Sẽ load từ units.json
+        let currentIdx = 0;
 
-            const percent = Math.round((scoreCount / questionsData.length) * 100);
-            await fetch('/save-score', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    lessonTitle: "<%= lesson.title %>",
-                    score: scoreCount + "/" + questionsData.length,
-                    percentage: percent
-                })
+        // Giả sử bạn fetch dữ liệu từ file units.json đã soạn
+        async function loadData() {
+            const res = await fetch('../data/units.json'); // Đường dẫn tới file JSON của bạn
+            const data = await res.json();
+            // Lấy Unit 1 làm ví dụ
+            questions = data.unit1.questions; 
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const qData = questions[currentIdx];
+            const qEl = document.getElementById('question');
+            const optEl = document.getElementById('options');
+
+            // SỬA LỖI Ở ĐÂY: Dùng qData.text thay vì qData.q
+            qEl.innerText = `Câu ${currentIdx + 1}: ${qData.text}`;
+            
+            optEl.innerHTML = '';
+            // SỬA LỖI Ở ĐÂY: Dùng qData.options thay vì qData.answers
+            qData.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option';
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    if(i === qData.correct) alert("Chính xác!");
+                    else alert("Sai rồi!");
+                    currentIdx++;
+                    if(currentIdx < questions.length) showQuestion();
+                    else alert("Hoàn thành 20 câu!");
+                };
+                optEl.appendChild(btn);
             });
-            alert('Kết quả của bạn: ' + percent + '%. Đã lưu vào hệ thống!');
-            window.location.href = '/';
-        };
+        }
+        loadData();
     </script>
 </body>
 </html>
