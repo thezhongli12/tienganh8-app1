@@ -2,58 +2,98 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Luyện Tập - Tiếng Anh 8</title>
+    <title><%= lesson.title %></title>
     <style>
-        .quiz-container { max-width: 600px; margin: 50px auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .question { font-size: 20px; font-weight: bold; margin-bottom: 20px; }
-        .btn-option { display: block; width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; text-align: left; }
-        .btn-option:hover { background: #f0f0f0; }
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; line-height: 1.6; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .q-card { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 10px; transition: 0.3s; }
+        .correct { border: 2px solid #2ecc71; background: #eafff2; }
+        .wrong { border: 2px solid #e74c3c; background: #fff2f1; }
+        .score-box { display: none; text-align: center; background: #2c3e50; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .opt { border: 1px solid #ccc; padding: 10px; border-radius: 5px; cursor: pointer; }
+        .btn { background: #4a90e2; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 17px; }
     </style>
 </head>
 <body>
-    <div class="quiz-container">
-        <div id="question" class="question">Đang tải câu hỏi...</div>
-        <div id="options"></div>
+
+<div class="container">
+    <div id="result" class="score-box">
+        <h2 id="totalScore">Điểm: 0/0</h2>
+        <a href="/" style="color: #3498db; text-decoration: none;">Về trang chủ</a>
     </div>
 
-    <script>
-        let questions = []; // Sẽ load từ units.json
-        let currentIdx = 0;
+    <h1><%= lesson.title %></h1>
+    <form id="quizForm">
+        <% questions.forEach((item, index) => { %>
+            <div class="q-card" id="card-<%= index %>" data-ans="<%= item.answer %>" data-type="<%= item.type %>">
+                <p><strong>Câu <%= index + 1 %>:</strong> <%= item.q %></p>
+                
+                <% if(item.options) { %>
+                    <div class="options">
+                        <% item.options.forEach((opt, idx) => { let L = String.fromCharCode(65+idx); %>
+                            <label class="opt">
+                                <input type="radio" name="ans-<%= index %>" value="<%= L %>" required> <%= L %>. <%= opt %>
+                            </label>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <input type="text" name="ans-<%= index %>" placeholder="Nhập đáp án..." style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc;">
+                <% } %>
+                <p id="msg-<%= index %>" style="font-weight:bold; margin-top:10px;"></p>
+            </div>
+        <% }) %>
+        <button type="button" class="btn" onclick="submitQuiz()">Nộp bài & Lưu điểm</button>
+    </form>
+</div>
 
-        // Giả sử bạn fetch dữ liệu từ file units.json đã soạn
-        async function loadData() {
-            const res = await fetch('../data/units.json'); // Đường dẫn tới file JSON của bạn
-            const data = await res.json();
-            // Lấy Unit 1 làm ví dụ
-            questions = data.unit1.questions; 
-            showQuestion();
+<script>
+async function submitQuiz() {
+    const cards = document.querySelectorAll('.q-card');
+    let correctCount = 0;
+
+    cards.forEach((card, i) => {
+        const type = card.dataset.type;
+        const answer = card.dataset.ans.trim().toLowerCase();
+        let userAns = "";
+
+        if(type.includes('choice') || type === 'reading') {
+            const picked = document.querySelector(`input[name="ans-${i}"]:checked`);
+            userAns = picked ? picked.value.toLowerCase() : "";
+        } else {
+            userAns = document.querySelector(`input[name="ans-${i}"]`).value.trim().toLowerCase();
         }
 
-        function showQuestion() {
-            const qData = questions[currentIdx];
-            const qEl = document.getElementById('question');
-            const optEl = document.getElementById('options');
-
-            // SỬA LỖI Ở ĐÂY: Dùng qData.text thay vì qData.q
-            qEl.innerText = `Câu ${currentIdx + 1}: ${qData.text}`;
-            
-            optEl.innerHTML = '';
-            // SỬA LỖI Ở ĐÂY: Dùng qData.options thay vì qData.answers
-            qData.options.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'btn-option';
-                btn.innerText = opt;
-                btn.onclick = () => {
-                    if(i === qData.correct) alert("Chính xác!");
-                    else alert("Sai rồi!");
-                    currentIdx++;
-                    if(currentIdx < questions.length) showQuestion();
-                    else alert("Hoàn thành 20 câu!");
-                };
-                optEl.appendChild(btn);
-            });
+        const msg = document.getElementById('msg-' + i);
+        if(userAns === answer) {
+            correctCount++;
+            card.className = "q-card correct";
+            msg.innerText = "✅ Đúng!";
+            msg.style.color = "green";
+        } else {
+            card.className = "q-card wrong";
+            msg.innerText = "❌ Sai. Đáp án: " + answer.toUpperCase();
+            msg.style.color = "red";
         }
-        loadData();
-    </script>
+    });
+
+    const percent = Math.round((correctCount / cards.length) * 100);
+    
+    // Lưu điểm vào DB qua API
+    await fetch('/save-score', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            lessonTitle: "<%= lesson.title %>",
+            score: `${correctCount}/${cards.length}`,
+            percentage: percent
+        })
+    });
+
+    document.getElementById('result').style.display = "block";
+    document.getElementById('totalScore').innerText = `Kết quả: ${correctCount}/${cards.length} (${percent}%)`;
+    window.scrollTo(0, 0);
+}
+</script>
 </body>
 </html>
