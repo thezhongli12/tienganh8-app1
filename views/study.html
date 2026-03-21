@@ -1,64 +1,72 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title><%= (locals.lesson && lesson.title) ? lesson.title : "Bài học" %></title>
+    <title><%= lesson.title %></title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; color: #333; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        
-        /* Nút quay về trang chủ */
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .btn-home { 
-            display: inline-flex; align-items: center; padding: 10px 18px; 
-            background: #ffffff; color: #2c3e50; text-decoration: none; 
-            border-radius: 10px; margin-bottom: 25px; font-weight: 600; 
-            border: 1px solid #dcdde1; transition: all 0.2s;
+            display: inline-block; padding: 10px 15px; background: #fff; color: #333; 
+            text-decoration: none; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 20px; font-weight: bold;
         }
-        .btn-home:hover { background: #f1f2f6; border-color: #7f8c8d; transform: translateY(-2px); }
-        
-        .question-box { margin-bottom: 25px; padding: 20px; border: 1px solid #edf2f7; border-radius: 12px; }
-        .btn-submit { background: #3498db; color: white; padding: 15px; border: none; border-radius: 10px; cursor: pointer; width: 100%; font-size: 17px; font-weight: bold; }
-        .btn-submit:hover { background: #2980b9; }
-        .error-alert { background: #fff5f5; color: #c53030; padding: 15px; border-radius: 10px; border: 1px solid #feb2b2; margin-bottom: 20px; text-align: center; }
+        .btn-home:hover { background: #eee; }
+        .question-box { margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 10px; }
+        .btn-submit { background: #3498db; color: white; padding: 15px; border: none; border-radius: 10px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="/" class="btn-home">⬅️ Quay về Trang chủ</a>
-
-        <% if (locals.lesson) { %>
-            <h2 style="color: #2d3748;"><%= lesson.title %></h2>
-            <p style="color: #718096; margin-bottom: 30px;">Chào, <strong><%= user.username %></strong>! Hãy hoàn thành các câu hỏi dưới đây.</p>
-        <% } %>
-
-        <% if (locals.error) { %>
-            <div class="error-alert">⚠️ <%= error %></div>
-        <% } %>
+        <a href="/" class="btn-home">🏠 Quay về Trang chủ</a>
+        <h2><%= lesson.title %></h2>
+        <p>Học sinh: <strong><%= user.username %></strong></p>
+        <hr>
 
         <form id="quizForm">
-            <% if (locals.questions && questions.length > 0) { %>
+            <% if (questions && questions.length > 0) { %>
                 <% questions.forEach((q, index) => { %>
                     <div class="question-box">
-                        <p style="font-size: 18px; margin-top: 0;"><strong>Câu <%= index + 1 %>:</strong> <%= q.text %></p>
-                        <% q.options.forEach((opt, optIdx) => { %>
-                            <label style="display: block; margin: 10px 0; cursor: pointer; padding: 8px; border-radius: 5px; background: #f8fafc;">
-                                <input type="radio" name="q<%= index %>" value="<%= optIdx %>" required style="margin-right: 10px;"> <%= opt %>
-                            </label>
-                        <% }) %>
+                        <p><strong>Câu <%= index + 1 %>:</strong> <%= q.text %></p>
+                        
+                        <% if (q.options && q.options.length > 0) { %>
+                            <% q.options.forEach((opt, optIdx) => { %>
+                                <label style="display: block; margin: 8px 0;">
+                                    <input type="radio" name="q<%= index %>" value="<%= optIdx %>" required> <%= opt %>
+                                </label>
+                            <% }) %>
+                        <% } else { %>
+                            <p style="color: red;">⚠️ Lỗi: Câu hỏi này thiếu lựa chọn đáp án trong dữ liệu.</p>
+                        <% } %>
                     </div>
                 <% }) %>
-                <button type="submit" class="btn-submit">Nộp bài & Xem kết quả</button>
+                <button type="submit" class="btn-submit">Nộp bài & Lưu kết quả</button>
             <% } else { %>
-                <p style="text-align: center; color: #a0aec0; padding: 40px;">(Dữ liệu bài tập hiện chưa có hoặc bị lỗi định dạng file JSON)</p>
+                <p style="text-align: center; color: #7f8c8d;">Hiện chưa có câu hỏi cho bài học này.</p>
             <% } %>
         </form>
     </div>
 
     <script>
+        const questionsData = <%- JSON.stringify(questions) %>;
         document.getElementById('quizForm').onsubmit = async (e) => {
             e.preventDefault();
-            // Bạn có thể thêm logic tính điểm thực tế ở đây
-            alert('Bài của bạn đã được gửi lên hệ thống!');
+            let scoreCount = 0;
+            questionsData.forEach((q, i) => {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                if (selected && parseInt(selected.value) === q.correct) scoreCount++;
+            });
+
+            const percent = Math.round((scoreCount / questionsData.length) * 100);
+            await fetch('/save-score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    lessonTitle: "<%= lesson.title %>",
+                    score: scoreCount + "/" + questionsData.length,
+                    percentage: percent
+                })
+            });
+            alert('Kết quả của bạn: ' + percent + '%. Đã lưu vào hệ thống!');
             window.location.href = '/';
         };
     </script>
