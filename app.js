@@ -10,10 +10,9 @@ const app = express();
 // --- 1. KẾT NỐI DATABASE ---
 const mongoURI = process.env.MONGO_URI; 
 mongoose.connect(mongoURI)
-    .then(() => console.log('✅ Kết nối MongoDB thành công'))
-    .catch(err => console.error('❌ Lỗi kết nối DB:', err));
+    .then(() => console.log('✅ MongoDB Connected'))
+    .catch(err => console.error('❌ DB Error:', err));
 
-// Định nghĩa Models
 const User = mongoose.model('User', new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
@@ -28,10 +27,10 @@ const Score = mongoose.model('Score', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// --- 2. CẤU HÌNH (Sửa lỗi đường dẫn Vercel) ---
+// --- 2. CẤU HÌNH ---
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Đường dẫn tuyệt đối
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     secret: 'secret_080212',
     resave: false,
@@ -41,7 +40,7 @@ app.use(session({
 
 app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
-app.set('views', path.join(__dirname, 'views')); // Đường dẫn tuyệt đối
+app.set('views', path.join(__dirname, 'views'));
 
 const lessonsData = [
     { id: 1, title: "Unit 1: Leisure Activities" },
@@ -65,28 +64,22 @@ app.get('/', (req, res) => {
     res.render('index', { user: req.session.user, lessons: lessonsData });
 });
 
-// ĐĂNG KÝ
 app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     const userRegex = /^[a-zA-Z0-9]{6,}$/; 
-
     if (!userRegex.test(username)) return res.render('register', { error: 'Tên ít nhất 6 ký tự, không dấu/cách!' });
     if (password.length < 8) return res.render('register', { error: 'Mật khẩu ít nhất 8 ký tự!' });
 
     try {
         const checkUser = await User.findOne({ username });
-        if (checkUser) return res.render('register', { error: 'Tên đăng nhập đã tồn tại!' });
-        
+        if (checkUser) return res.render('register', { error: 'Tên đã tồn tại!' });
         const newUser = await User.create({ username, password });
         req.session.user = { username: newUser.username };
-        req.session.save(() => res.redirect('/')); // Lưu session rồi mới chuyển trang
-    } catch (e) {
-        res.render('register', { error: 'Lỗi hệ thống!' });
-    }
+        req.session.save(() => res.redirect('/')); 
+    } catch (e) { res.render('register', { error: 'Lỗi hệ thống!' }); }
 });
 
-// ĐĂNG NHẬP
 app.get('/login', (req, res) => res.render('login', { error: null }));
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -99,20 +92,37 @@ app.post('/login', async (req, res) => {
         req.session.user = { username: found.username };
         return req.session.save(() => res.redirect('/'));
     }
-    res.render('login', { error: 'Sai tên đăng nhập hoặc mật khẩu!' });
+    res.render('login', { error: 'Sai tên hoặc mật khẩu!' });
 });
 
-// HỌC TẬP
+// SỬA LỖI 500 TẠI ĐÂY
 app.get('/study/:id', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const lessonId = req.params.id;
     const lessonInfo = lessonsData.find(l => l.id == lessonId);
+    
     try {
         const dataPath = path.join(__dirname, 'data', 'units.json');
-        const allData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-        const unit = allData['unit' + lessonId];
-        res.render('study', { user: req.session.user, lesson: lessonInfo, questions: unit ? unit.questions : [] });
-    } catch (err) { res.render('study', { user: req.session.user, lesson: lessonInfo, questions: [] }); }
+        const fileContent = fs.readFileSync(dataPath, 'utf8');
+        const allData = JSON.parse(fileContent);
+        
+        const unit = allData['unit' + lessonId] || { questions: [] };
+        
+        // Tự động kiểm tra và vá lỗi nếu câu hỏi thiếu 'options'
+        const safeQuestions = (unit.questions || []).map(q => ({
+            text: q.text || "Câu hỏi không có nội dung",
+            options: Array.isArray(q.options) ? q.options : [], 
+            correct: q.correct !== undefined ? q.correct : 0
+        }));
+
+        res.render('study', { 
+            user: req.session.user, 
+            lesson: lessonInfo, 
+            questions: safeQuestions 
+        });
+    } catch (err) {
+        res.render('study', { user: req.session.user, lesson: lessonInfo, questions: [] });
+    }
 });
 
 app.post('/save-score', async (req, res) => {
@@ -122,7 +132,6 @@ app.post('/save-score', async (req, res) => {
     res.json({ success: true });
 });
 
-// ADMIN
 app.get('/admin', async (req, res) => {
     if (!req.session.user || req.session.user.username !== 'admin') return res.redirect('/login');
     const users = await User.find().sort({ createdAt: -1 });
@@ -132,9 +141,4 @@ app.get('/admin', async (req, res) => {
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/login'); });
 
-// QUAN TRỌNG CHO VERCEL
-const PORT = process.env.PORT || 3000;
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.log(`🚀 Server chạy tại port ${PORT}`));
-}
 module.exports = app;
