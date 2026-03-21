@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Ký - Hệ Thống Học Tập</title>
+    <title>Đăng Ký - Tiếng Anh 8</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -48,6 +48,7 @@
             font-size: 14px;
             color: #666;
         }
+        /* QUAN TRỌNG: Đường dẫn quay lại Login */
         .switch a { color: #28a745; text-decoration: none; font-weight: bold; }
     </style>
 </head>
@@ -61,7 +62,7 @@
     <button onclick="handleRegister()">Tạo Tài Khoản</button>
     
     <div class="switch">
-        Đã có tài khoản? <a href="login.html">Đăng nhập</a>
+        Đã có tài khoản? <a href="./login.html">Đăng nhập ngay</a>
     </div>
 </div>
 
@@ -71,32 +72,43 @@
         const pass = document.getElementById('regPass').value.trim();
         const confirm = document.getElementById('confirmPass').value.trim();
 
+        // Kiểm tra nhập liệu trống
         if (!user || !pass || !confirm) {
-            alert("Vui lòng nhập đầy đủ thông tin!");
+            alert("Vui lòng không để trống thông tin!");
             return;
         }
 
+        // Kiểm tra khớp mật khẩu
         if (pass !== confirm) {
             alert("Mật khẩu xác nhận không khớp!");
             return;
         }
 
-        // Kiểm tra xem tài khoản đã tồn tại chưa
+        // Kiểm tra tài khoản đã tồn tại
         if (localStorage.getItem(user)) {
-            alert("Tên đăng nhập này đã có người sử dụng!");
+            alert("Tên đăng nhập này đã được sử dụng!");
             return;
         }
 
-        // Lưu thông tin (với mật khẩu admin mặc định bạn lưu là 080212)
+        // Lưu dữ liệu vào LocalStorage
         const userData = {
             password: pass,
-            joinedDate: new Date().toLocaleDateString()
+            created: new Date().toISOString()
         };
 
         localStorage.setItem(user, JSON.stringify(userData));
-        alert("Đăng ký thành công! Bạn có thể đăng nhập ngay.");
-        window.location.href = 'login.html';
+        
+        alert("Chúc mừng! Bạn đã đăng ký thành công.");
+        // Chuyển hướng về trang đăng nhập cùng thư mục
+        window.location.href = './login.html';
     }
+
+    // Hỗ trợ nhấn phím Enter
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            handleRegister();
+        }
+    });
 </script>
 
 </body>
