@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Nhập - Hệ Thống Học Tập</title>
+    <title>Đăng Nhập - Tiếng Anh 8</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -60,7 +60,7 @@
     <button onclick="handleLogin()">Đăng Nhập</button>
     
     <div class="switch">
-        Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a>
+        Chưa có tài khoản? <a href="./register.html">Đăng ký ngay</a>
     </div>
 </div>
 
@@ -70,15 +70,15 @@
         const passInp = document.getElementById('password').value.trim();
 
         if (!userInp || !passInp) {
-            alert("Vui lòng nhập đầy đủ thông tin!");
+            alert("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!");
             return;
         }
 
-        // 1. Kiểm tra tài khoản Admin (Mật khẩu: 080212)
+        // 1. Kiểm tra tài khoản Admin (Mật khẩu bạn lưu: 080212)
         if (userInp === 'admin' && passInp === '080212') {
             localStorage.setItem('currentUser', 'Admin');
-            alert("Chào mừng Quản trị viên quay trở lại!");
-            window.location.href = 'index.html';
+            alert("Chào Admin! Đang chuyển hướng...");
+            window.location.href = './index.html';
             return;
         }
 
@@ -88,22 +88,21 @@
         if (storedData) {
             const userData = JSON.parse(storedData);
             
-            // So khớp mật khẩu
             if (userData.password === passInp) {
                 localStorage.setItem('currentUser', userInp);
                 alert("Đăng nhập thành công!");
-                window.location.href = 'index.html';
+                window.location.href = './index.html';
             } else {
-                // LỖI SAI MẬT KHẨU
-                alert("Mật khẩu không chính xác. Vui lòng kiểm tra lại!");
+                // Báo lỗi khi sai mật khẩu
+                alert("Sai mật khẩu! Vui lòng thử lại.");
             }
         } else {
-            // LỖI TÀI KHOẢN KHÔNG TỒN TẠI
-            alert("Tài khoản này không tồn tại trên hệ thống!");
+            // Báo lỗi khi không tìm thấy tên đăng nhập
+            alert("Tài khoản này chưa được đăng ký!");
         }
     }
 
-    // Cho phép nhấn Enter để đăng nhập
+    // Hỗ trợ bấm Enter để đăng nhập nhanh
     document.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             handleLogin();
