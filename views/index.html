@@ -3,93 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tiếng Anh 8 - Menu Bài Học</title>
+    <title>Tiếng Anh 8 - Menu</title>
     <style>
-        :root { --primary: #1a73e8; --bg: #f8f9fa; --text: #333; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        h1 { text-align: center; color: var(--primary); margin-bottom: 30px; text-transform: uppercase; }
-        
-        .unit-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-            gap: 20px; max-width: 1200px; margin: 0 auto; 
-        }
-
-        .unit-card { 
-            background: white; border-radius: 15px; padding: 25px; text-align: center; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.3s;
-            border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between;
-        }
-
-        .unit-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-        .unit-card.updating { background: #fdfdfd; border: 1px dashed #ccc; opacity: 0.7; }
-
-        h3 { margin-top: 0; color: #444; font-size: 1.4rem; }
-        p { color: #666; font-size: 0.95rem; margin-bottom: 20px; }
-
-        .btn-start { 
-            background: var(--primary); color: white; border: none; padding: 12px 25px; 
-            border-radius: 8px; cursor: pointer; font-weight: bold; text-decoration: none; 
-            display: inline-block;
-        }
-
-        .btn-disabled { background: #ccc; cursor: not-allowed; }
+        :root { --blue: #1a73e8; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; text-align: center; }
+        h1 { color: var(--blue); margin-bottom: 30px; text-transform: uppercase; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
+        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between; height: 180px; transition: 0.3s; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .card.off { background: #fafafa; border: 1px dashed #ccc; opacity: 0.7; }
+        h3 { margin: 0; color: #444; }
+        .btn { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; text-decoration: none; font-weight: bold; display: block; margin-top: 15px; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
-
     <h1>Chương Trình Tiếng Anh 8</h1>
-    
-    <div id="unit-grid" class="unit-grid">
-        </div>
+    <div id="unit-grid" class="grid"></div>
 
     <script>
-        // DỮ LIỆU CỨNG: Để tránh lỗi 404/Lỗi kết nối từ logs của bạn
-        const units = {
-            1: "Leisure Activities",
-            2: "Life in the Countryside",
-            3: "Teenagers",
-            4: "Ethnic Groups of Vietnam",
-            5: "Our Customs and Traditions",
-            6: "Lifestyles",
-            7: "Environmental Protection",
-            8: "Shopping",
-            9: "Natural Disasters"
+        // Dữ liệu nhúng trực tiếp để sửa lỗi fetch từ logs
+        const data = {
+            "unit1": { "title": "Leisure Activities" },
+            "unit2": { "title": "Life in the Countryside" },
+            "unit3": { "title": "Teenagers" },
+            "unit4": { "title": "Ethnic Groups of Vietnam" },
+            "unit5": { "title": "Our Customs and Traditions" },
+            "unit6": { "title": "Lifestyles" },
+            "unit7": { "title": "Environmental Protection" },
+            "unit8": { "title": "Shopping" },
+            "unit9": { "title": "Natural Disasters" }
         };
 
-        function initApp() {
-            const grid = document.getElementById('unit-grid');
-            grid.innerHTML = ''; 
-
-            // Vòng lặp cố định 12 lần để hiện Unit 10-12 "Đang cập nhật"
-            for (let i = 1; i <= 12; i++) {
-                const card = document.createElement('div');
-                const isAvailable = i <= 9; // Hiện tại bạn có dữ liệu đến Unit 9
-                
-                card.className = isAvailable ? 'unit-card' : 'unit-card updating';
-
-                if (isAvailable) {
-                    card.innerHTML = `
-                        <div>
-                            <h3>Unit ${i}</h3>
-                            <p>${units[i]}</p>
-                        </div>
-                        <a href="/study.html?u=${i}" class="btn-start">VÀO HỌC NGAY</a>
-                    `;
-                } else {
-                    card.innerHTML = `
-                        <div>
-                            <h3>Unit ${i}</h3>
-                            <p style="font-style: italic; color: #999;">Nội dung đang được biên soạn...</p>
-                        </div>
-                        <button class="btn-start btn-disabled" disabled>ĐANG CẬP NHẬT</button>
-                    `;
-                }
-                grid.appendChild(card);
+        const grid = document.getElementById('unit-grid');
+        // Hiển thị đầy đủ 12 Unit, Unit 10-12 sẽ tự động báo Đang soạn
+        for (let i = 1; i <= 12; i++) {
+            const u = data[`unit${i}`];
+            const card = document.createElement('div');
+            card.className = u ? 'card' : 'card off';
+            
+            if (u) {
+                card.innerHTML = `<div><h3>Unit ${i}</h3><p>${u.title}</p></div><a href="/study?u=${i}" class="btn">VÀO HỌC</a>`;
+            } else {
+                card.innerHTML = `<div><h3>Unit ${i}</h3><p><i>Đang soạn nội dung...</i></p></div><button class="btn" disabled>CHƯA MỞ</button>`;
             }
+            grid.appendChild(card);
         }
-
-        window.onload = initApp;
     </script>
 </body>
 </html>
+
