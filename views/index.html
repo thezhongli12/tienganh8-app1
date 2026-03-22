@@ -3,99 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tiếng Anh 8 - Menu Bài Học</title>
+    <title>Tiếng Anh 8 - Menu</title>
     <style>
-        :root { --primary: #1a73e8; --bg: #f8f9fa; --text: #333; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        h1 { text-align: center; color: var(--primary); margin-bottom: 30px; text-transform: uppercase; }
+        :root { --blue: #1a73e8; --bg: #f1f3f4; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; text-align: center; }
+        h1 { color: var(--blue); text-transform: uppercase; margin-bottom: 30px; }
         
-        .unit-grid { 
+        .grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-            gap: 20px; max-width: 1200px; margin: 0 auto; 
+            gap: 20px; max-width: 1100px; margin: 0 auto; 
         }
 
-        .unit-card { 
-            background: white; border-radius: 15px; padding: 25px; text-align: center; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.3s;
-            border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between;
+        .card { 
+            background: white; border-radius: 12px; padding: 25px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s;
+            display: flex; flex-direction: column; justify-content: space-between;
+            border: 1px solid #e0e0e0;
         }
 
-        .unit-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-        .unit-card.updating { background: #fdfdfd; border: 1px dashed #ccc; opacity: 0.7; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+        .card.off { opacity: 0.6; background: #fafafa; border-style: dashed; }
 
-        h3 { margin-top: 0; color: #444; }
-        .btn-start { 
-            background: var(--primary); color: white; border: none; padding: 12px 25px; 
-            border-radius: 8px; cursor: pointer; font-weight: bold; text-decoration: none; 
+        h3 { margin: 0 0 10px 0; color: #333; }
+        p { color: #666; font-size: 0.9em; margin-bottom: 20px; }
+
+        .btn { 
+            background: var(--blue); color: white; border: none; padding: 12px; 
+            border-radius: 6px; cursor: pointer; font-weight: bold; text-decoration: none; 
         }
-        .btn-disabled { background: #ccc; cursor: not-allowed; }
-        #error-msg { color: #d93025; background: #fce8e6; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; text-align: center; }
+        .btn:disabled { background: #bdc1c6; cursor: not-allowed; }
+        
+        #msg { color: #d93025; background: #fce8e6; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
     <h1>Chương Trình Tiếng Anh 8</h1>
-    <div id="error-msg"></div>
-    <div id="unit-grid" class="unit-grid">Đang tải bài học...</div>
+    
+    <div id="msg"></div>
+    <div id="unit-grid" class="grid">Đang tải bài học...</div>
 
     <script>
-        async function initApp() {
+        async function loadApp() {
             const grid = document.getElementById('unit-grid');
-            const errorBox = document.getElementById('error-msg');
+            const msg = document.getElementById('msg');
 
             try {
-                // CƠ CHẾ FETCH KÉP: Thử cả 2 đường dẫn để chắc chắn không lỗi JSON
+                // Thử cả 2 đường dẫn để chắc chắn tìm thấy file JSON
                 let response = await fetch('/data/units.json');
-                if (!response.ok) {
-                    response = await fetch('../data/units.json');
-                }
+                if (!response.ok) response = await fetch('../data/units.json');
                 
-                if (!response.ok) throw new Error("Không thể tải units.json");
+                if (!response.ok) throw new Error("404");
                 
                 const data = await response.json();
                 grid.innerHTML = ''; 
 
-                // Vòng lặp cố định 12 lần để hiện Unit 10-12
+                // Luôn lặp đủ 12 Unit
                 for (let i = 1; i <= 12; i++) {
                     const unitKey = `unit${i}`;
-                    const unitData = data[unitKey];
+                    const uData = data[unitKey];
                     
-                    // Kiểm tra Unit có bài hay không
-                    const isAvailable = unitData && unitData.questions && unitData.questions.length > 0;
+                    // Kiểm tra xem Unit i có câu hỏi không
+                    const isOk = uData && uData.questions && uData.questions.length > 0;
                     
                     const card = document.createElement('div');
-                    card.className = isAvailable ? 'unit-card' : 'unit-card updating';
+                    card.className = isOk ? 'card' : 'card off';
 
-                    if (isAvailable) {
+                    if (isOk) {
                         card.innerHTML = `
                             <div>
                                 <h3>Unit ${i}</h3>
-                                <p>${unitData.title || 'Luyện tập củng cố'}</p>
+                                <p>${uData.title || 'Luyện tập tổng hợp'}</p>
                             </div>
-                            <a href="/study?u=${i}" class="btn-start">VÀO HỌC</a>
+                            <a href="/study?u=${i}" class="btn">VÀO HỌC</a>
                         `;
                     } else {
+                        // Hiển thị cho Unit 10, 11, 12 đang cập nhật
                         card.innerHTML = `
                             <div>
                                 <h3>Unit ${i}</h3>
-                                <p style="font-style: italic; color: #999;">Đang cập nhật nội dung...</p>
+                                <p><i>Nội dung đang được cập nhật...</i></p>
                             </div>
-                            <button class="btn-start btn-disabled" disabled>CHƯA MỞ</button>
+                            <button class="btn" disabled>CHƯA MỞ</button>
                         `;
                     }
                     grid.appendChild(card);
                 }
 
-            } catch (error) {
-                console.error(error);
-                errorBox.style.display = 'block';
-                errorBox.innerHTML = `<b>Lỗi kết nối:</b> Không tìm thấy dữ liệu. Kiểm tra file <code>/data/units.json</code>`;
+            } catch (err) {
+                msg.style.display = 'block';
+                msg.innerHTML = `<b>Lỗi kết nối:</b> Không tìm thấy dữ liệu tại <code>/data/units.json</code>.`;
                 grid.innerHTML = ''; 
             }
         }
 
-        window.onload = initApp;
+        window.onload = loadApp;
     </script>
 </body>
 </html>
