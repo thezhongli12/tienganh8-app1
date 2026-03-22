@@ -1,69 +1,38 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <title>Luyện Tập - Tiếng Anh 8</title>
+    <meta charset="UTF-8"><title>Luyện Tập Tiếng Anh 8</title>
     <style>
-        body { font-family: 'Arial', sans-serif; background: #eef2f7; margin: 0; padding: 20px; }
-        .header { display: flex; align-items: center; background: white; padding: 10px 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn-back { background: #f44336; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-right: 20px; }
-        .quiz-box { background: white; padding: 30px; border-radius: 15px; max-width: 600px; margin: 0 auto; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .option-btn { display: block; width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; text-align: left; font-size: 16px; }
-        .option-btn:hover { background: #f0f7ff; border-color: #2196F3; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
+        .box { background: white; max-width: 600px; margin: 0 auto; padding: 30px; border-radius: 15px; shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .opt { display: block; width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; text-align: left; }
+        .opt:hover { background: #e7f3ff; }
+        .back { display: inline-block; margin-bottom: 20px; color: red; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <button class="btn-back" onclick="location.href='./index.html'">⬅ Quay về Menu</button>
+    <a href="/" class="back">← Quay về Menu</a>
+    <div class="box">
         <h2 id="title">Đang tải...</h2>
+        <div id="quiz"></div>
     </div>
-
-    <div class="quiz-box">
-        <div id="question" style="font-size: 20px; font-weight: bold; margin-bottom: 20px;"></div>
-        <div id="options"></div>
-    </div>
-
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const unitId = urlParams.get('u') || 1;
-        let questions = [];
-        let currentIdx = 0;
+        const questions = {
+            "1": [{ q: "I love _______ DIY.", a: ["doing", "making", "playing"], c: 0 }],
+            "2": [{ q: "The cattle are _______ on the field.", a: ["running", "grazing", "flying"], c: 1 }]
+        };
+        const u = new URLSearchParams(window.location.search).get('u') || "1";
+        const data = questions[u];
+        const title = document.getElementById('title');
+        const quiz = document.getElementById('quiz');
 
-        async function startQuiz() {
-            const res = await fetch('../data/units.json');
-            const data = await res.json();
-            questions = data[`unit${unitId}`].questions;
-            document.getElementById('title').innerText = `Luyện tập Unit ${unitId}`;
-            renderQuestion();
+        if (data) {
+            title.innerText = "Unit " + u;
+            quiz.innerHTML = `p>${data[0].q}</p>` + data[0].a.map((opt, i) => 
+                `<button class="opt" onclick="alert('${i==data[0].c ? "Đúng rồi!" : "Sai rồi!"}')">${opt}</button>`).join('');
+        } else {
+            title.innerText = "Chưa có câu hỏi cho Unit " + u;
         }
-
-        function renderQuestion() {
-            const q = questions[currentIdx];
-            document.getElementById('question').innerText = `Câu ${currentIdx + 1}: ${q.text || q.q}`;
-            
-            const optDiv = document.getElementById('options');
-            optDiv.innerHTML = '';
-            
-            const choices = q.options || q.answers || [];
-            choices.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.innerText = opt;
-                btn.onclick = () => {
-                    if(i === q.correct) alert("Chính xác! 🎉");
-                    else alert("Tiếc quá, sai rồi! ❌");
-                    
-                    currentIdx++;
-                    if(currentIdx < questions.length) renderQuestion();
-                    else {
-                        alert("Chúc mừng! Bạn đã hoàn thành bài học.");
-                        location.href = './index.html';
-                    }
-                };
-                optDiv.appendChild(btn);
-            });
-        }
-        startQuiz();
     </script>
 </body>
 </html>
