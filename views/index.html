@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tiếng Anh 8 - Menu</title>
+    <title>Tiếng Anh 8 - Menu Bài Học</title>
     <style>
-        :root { --blue: #1a73e8; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; text-align: center; }
-        h1 { color: var(--blue); margin-bottom: 30px; text-transform: uppercase; font-weight: bold; }
+        :root { --primary: #1a73e8; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 20px; text-align: center; }
+        h1 { color: var(--primary); margin-bottom: 30px; text-transform: uppercase; font-weight: bold; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
-        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between; height: 160px; transition: 0.3s; }
+        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between; height: 180px; transition: 0.3s; }
         .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-        .card.off { background: #fafafa; border: 1px dashed #ccc; opacity: 0.7; }
-        h3 { margin: 0; color: #333; font-size: 1.3em; }
-        p { color: #666; font-size: 0.9em; margin: 10px 0; }
-        .btn { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; text-decoration: none; font-weight: bold; display: block; }
+        .card.updating { background: #fafafa; border: 1px dashed #ccc; opacity: 0.7; }
+        h3 { margin: 0; color: #333; font-size: 1.4em; }
+        p { color: #666; font-size: 0.95em; margin: 10px 0; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; text-decoration: none; font-weight: bold; display: block; }
         .btn:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
@@ -23,29 +23,28 @@
     <div id="unit-grid" class="grid"></div>
 
     <script>
-        // Dữ liệu nhúng trực tiếp để sửa dứt điểm lỗi 404 và lỗi kết nối
+        // Dữ liệu nhúng trực tiếp để sửa dứt điểm lỗi 404 và lỗi kết nối từ logs
         const data = {
-            "unit1": { "title": "Leisure Activities" },
-            "unit2": { "title": "Life in the Countryside" },
-            "unit3": { "title": "Teenagers" },
-            "unit4": { "title": "Ethnic Groups of Vietnam" },
-            "unit5": { "title": "Our Customs and Traditions" },
-            "unit6": { "title": "Lifestyles" },
-            "unit7": { "title": "Environmental Protection" },
-            "unit8": { "title": "Shopping" },
-            "unit9": { "title": "Natural Disasters" }
+            "unit1": "Leisure Activities",
+            "unit2": "Life in the Countryside",
+            "unit3": "Teenagers",
+            "unit4": "Ethnic Groups of Vietnam",
+            "unit5": "Our Customs and Traditions",
+            "unit6": "Lifestyles",
+            "unit7": "Environmental Protection",
+            "unit8": "Shopping",
+            "unit9": "Natural Disasters"
         };
 
         const grid = document.getElementById('unit-grid');
-        // Luôn hiển thị đủ 12 Unit cho người dùng
+        // Luôn hiển thị đúng 12 Unit, Unit 10-12 báo "Đang soạn"
         for (let i = 1; i <= 12; i++) {
-            const u = data[`unit${i}`];
+            const title = data[`unit${i}`];
             const card = document.createElement('div');
-            card.className = u ? 'card' : 'card off';
+            card.className = title ? 'card' : 'card updating';
             
-            if (u) {
-                // Sửa đường dẫn href để khớp với vercel.json
-                card.innerHTML = `<div><h3>Unit ${i}</h3><p>${u.title}</p></div><a href="/study?u=${i}" class="btn">VÀO HỌC</a>`;
+            if (title) {
+                card.innerHTML = `<div><h3>Unit ${i}</h3><p>${title}</p></div><a href="/study?u=${i}" class="btn">VÀO HỌC</a>`;
             } else {
                 card.innerHTML = `<div><h3>Unit ${i}</h3><p><i>Đang soạn nội dung...</i></p></div><button class="btn" disabled>CHƯA MỞ</button>`;
             }
