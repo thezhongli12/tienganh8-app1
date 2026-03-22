@@ -1,12 +1,12 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
-    { "source": "/data/(.*)", "destination": "/data/$1" },
+    { "source": "/", "destination": "/views/index.html" },
     { "source": "/login", "destination": "/views/login.html" },
     { "source": "/register", "destination": "/views/register.html" },
     { "source": "/study", "destination": "/views/study.html" },
-    { "source": "/index", "destination": "/views/index.html" },
-    { "source": "/", "destination": "/views/index.html" }
+    { "source": "/data/(.*)", "destination": "/data/$1" }
   ]
 }
