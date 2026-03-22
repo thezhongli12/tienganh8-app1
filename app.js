@@ -7,7 +7,7 @@ const fs = require('fs');
 
 const app = express();
 
-// 1. CẤU HÌNH DATABASE (Sử dụng mật khẩu admin 080212)
+// 1. CẤU HÌNH DATABASE
 const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/tienganh8?retryWrites=true&w=majority";
 
 mongoose.connect(mongoURI)
@@ -32,14 +32,18 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({ mongoUrl: mongoURI }),
-    cookie: { maxAge: 1000 * 60 * 60 * 24 } // Giữ đăng nhập trong 24 giờ
+    cookie: { maxAge: 1000 * 60 * 60 * 24 } 
 }));
 
 // 5. CÁC API HỆ THỐNG
-// API: Kiểm tra trạng thái đăng nhập
+// API: Kiểm tra trạng thái (Đã sửa để gửi role Admin/User)
 app.get('/api/user-status', (req, res) => {
     if (req.session.userId) {
-        res.json({ loggedIn: true, username: req.session.userId, role: req.session.role });
+        res.json({ 
+            loggedIn: true, 
+            username: req.session.userId, 
+            role: req.session.role // Trả về role để giao diện hiện nút Admin
+        });
     } else {
         res.json({ loggedIn: false });
     }
@@ -51,13 +55,12 @@ app.get('/api/questions', (req, res) => {
         const filePath = path.join(__dirname, 'data', 'units.json');
         if (fs.existsSync(filePath)) {
             const rawData = fs.readFileSync(filePath, 'utf8');
-            const jsonData = JSON.parse(rawData);
-            res.json(jsonData);
+            res.json(JSON.parse(rawData));
         } else {
-            res.status(404).json({ error: "Không tìm thấy file data/units.json" });
+            res.status(404).json({ error: "Không tìm thấy file" });
         }
     } catch (error) {
-        res.status(500).json({ error: "Lỗi đọc dữ liệu từ Server" });
+        res.status(500).json({ error: "Lỗi Server" });
     }
 });
 
@@ -70,53 +73,48 @@ app.get('/study', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'study.html'));
 });
 
-// 7. XỬ LÝ ĐĂNG KÝ & ĐĂNG NHẬP
+// TRANG QUẢN LÝ (Admin mới vào được)
+app.get('/admin', (req, res) => {
+    if (req.session.role !== 'admin') return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'views', 'admin.html'));
+});
 
-// --- API ĐĂNG KÝ ---
+// 7. XỬ LÝ ĐĂNG KÝ & ĐĂNG NHẬP
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
-        if (!username || !password) {
-            return res.json({ success: false, message: "Vui lòng nhập đầy đủ thông tin!" });
-        }
-
         const userExists = await User.findOne({ username });
-        if (userExists) {
-            return res.json({ success: false, message: "Tên đăng nhập đã tồn tại!" });
-        }
+        if (userExists) return res.json({ success: false, message: "Tên đăng nhập đã tồn tại!" });
 
         const newUser = new User({ username, password, role: 'user' });
         await newUser.save();
         res.json({ success: true, message: "Đăng ký thành công!" });
     } catch (err) {
-        res.status(500).json({ success: false, message: "Lỗi hệ thống khi đăng ký!" });
+        res.status(500).json({ success: false, message: "Lỗi hệ thống!" });
     }
 });
 
-// --- API ĐĂNG NHẬP ---
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         
-        // Kiểm tra quyền Admin bằng mật khẩu 080212
+        // Kiểm tra Admin (Mật khẩu cố định 080212)
         if (password === "080212") {
             req.session.userId = username || "Admin";
-            req.session.role = 'admin';
+            req.session.role = 'admin'; // Gán quyền Admin
             return res.json({ success: true, message: "Chào Admin!", redirect: "/" });
         }
 
-        // Kiểm tra User bình thường trong Database
         const user = await User.findOne({ username, password });
         if (user) {
             req.session.userId = user.username;
-            req.session.role = 'user';
-            return res.json({ success: true, message: "Đăng nhập thành công!", redirect: "/" });
+            req.session.role = 'user'; // Gán quyền User thường
+            return res.json({ success: true, message: "Thành công!", redirect: "/" });
         } else {
-            // Trả về thông báo lỗi cụ thể để Frontend hiển thị
             return res.json({ success: false, message: "Sai tài khoản hoặc mật khẩu!" });
         }
     } catch (err) {
-        res.status(500).json({ success: false, message: "Lỗi hệ thống đăng nhập!" });
+        res.status(500).json({ success: false, message: "Lỗi Server!" });
     }
 });
 
