@@ -1,34 +1,26 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Đăng ký</title>
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
-        .box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 340px; }
-        .note { font-size: 11px; color: #7f8c8d; margin-top: 5px; display: block; }
-        input { width: 100%; padding: 12px; margin: 10px 0 5px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .error-msg { color: #e74c3c; font-size: 13px; font-weight: bold; text-align: center; margin: 10px 0; }
-        button { width: 100%; padding: 12px; background: #2ecc71; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
-    </style>
-</head>
-<body>
-    <div class="box">
-        <h2 style="text-align: center;">Đăng Ký Thành Viên</h2>
-        <form action="/register" method="POST">
-            <span class="note">* Tên (Ít nhất 6 ký tự, không dấu/cách)</span>
-            <input type="text" name="username" placeholder="Tên đăng nhập" minlength="6" required>
-            
-            <span class="note">* Mật khẩu (Ít nhất 8 ký tự)</span>
-            <input type="password" name="password" placeholder="Mật khẩu" minlength="8" required>
-
-            <% if (locals.error) { %>
-                <div class="error-msg">⚠️ <%= error %></div>
-            <% } %>
-
-            <button type="submit">Đăng ký & Vào học</button>
-        </form>
-        <p style="text-align: center; font-size: 14px;"><a href="/login" style="text-decoration:none; color:#3498db;">Đã có tài khoản? Đăng nhập</a></p>
-    </div>
+<html lang="vi">
+<head><meta charset="UTF-8"><title>Đăng Ký</title></head>
+<body style="text-align:center; padding-top:100px; font-family:sans-serif;">
+    <h2>ĐĂNG KÝ TÀI KHOẢN</h2>
+    <form id="regForm">
+        <input type="text" id="u" placeholder="Tên đăng nhập" required><br><br>
+        <input type="password" id="p" placeholder="Mật khẩu" required><br><br>
+        <button type="submit">Đăng Ký</button>
+    </form>
+    <p><a href="/login">Đã có tài khoản? Đăng nhập</a></p>
+    <script>
+        document.getElementById('regForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: document.getElementById('u').value, password: document.getElementById('p').value})
+            });
+            const data = await res.json();
+            if(data.success) { alert("Thành công!"); window.location.href="/login"; }
+            else { alert(data.message); }
+        };
+    </script>
 </body>
 </html>
