@@ -2,60 +2,138 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Bài học - English 8</title>
+    <title>Học Tập - English 8</title>
     <style>
-        body { font-family: sans-serif; background: #eef2f7; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .unit-box { background: white; padding: 20px; border-radius: 10px; cursor: pointer; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .unit-box:hover { background: #1a73e8; color: white; }
-        #quiz-view { display: none; background: white; padding: 30px; border-radius: 15px; max-width: 700px; margin: auto; }
-        .option { display: block; padding: 10px; border: 1px solid #ddd; margin: 5px 0; border-radius: 5px; cursor: pointer; }
+        /* GIỮ NGUYÊN STYLE CŨ CỦA BẠN */
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; }
+        nav { background: #1a73e8; color: white; padding: 15px 5%; display: flex; justify-content: space-between; }
+        .container { max-width: 900px; margin: 30px auto; padding: 20px; }
+        
+        /* Danh sách Unit */
+        .unit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .unit-card { background: white; padding: 25px; border-radius: 12px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 1px solid #eee; }
+        .unit-card:hover { transform: translateY(-5px); border-color: #1a73e8; box-shadow: 0 8px 15px rgba(26, 115, 232, 0.1); }
+        .unit-card h3 { color: #1a73e8; margin-bottom: 5px; }
+
+        /* Vùng câu hỏi */
+        #quiz-area { background: white; padding: 40px; border-radius: 15px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .question-item { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0; }
+        .question-text { font-size: 18px; font-weight: 600; color: #2c3e50; margin-bottom: 15px; }
+        .option-label { display: block; padding: 12px 15px; margin: 8px 0; border: 1px solid #ebedef; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .option-label:hover { background: #f8faff; border-color: #1a73e8; }
+        .option-label input { margin-right: 10px; }
+        
+        .btn-submit { background: #34a853; color: white; width: 100%; padding: 18px; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .btn-back { background: none; border: 1px solid #ccc; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <div id="list-view">
-        <h2 style="text-align:center">Danh sách 12 Unit bài học</h2>
-        <div class="grid" id="unit-grid"></div>
+
+<nav>
+    <a href="/" style="color:white; text-decoration:none; font-weight:bold;">ENGLISH 8</a>
+    <span id="user-display">Đang tải...</span>
+</nav>
+
+<div class="container">
+    <div id="unit-list-view">
+        <h2 style="margin-bottom:25px; color:#5f6368;">Lựa chọn bài học:</h2>
+        <div class="unit-grid" id="unit-container">
+            </div>
     </div>
 
-    <div id="quiz-view">
-        <button onclick="location.reload()">← Quay lại</button>
-        <h2 id="title"></h2>
-        <div id="questions"></div>
-        <button id="submit" style="width:100%; padding:15px; margin-top:20px; background:#34a853; color:white; border:none; cursor:pointer">NỘP BÀI</button>
-        <h3 id="score" style="text-align:center"></h3>
+    <div id="quiz-area">
+        <button class="btn-back" onclick="goBack()">← Quay lại danh sách</button>
+        <h2 id="current-unit-title" style="color:#1a73e8;"></h2>
+        <hr>
+        <div id="questions-list"></div>
+        <button id="submit-btn" class="btn-submit">NỘP BÀI KIỂM TRA</button>
+        <div id="result-box" style="margin-top:25px; text-align:center; font-size:22px; font-weight:bold; color:#1a73e8;"></div>
     </div>
+</div>
 
-    <script>
-        let allData = {};
-        fetch('/api/questions').then(r => r.json()).then(data => {
-            allData = data;
-            const grid = document.getElementById('unit-grid');
-            Object.keys(data).forEach(key => {
-                grid.innerHTML += `<div class="unit-box" onclick="showQuiz('${key}')"><h3>${data[key].title}</h3></div>`;
-            });
-        });
+<script>
+    let masterData = {}; // Chứa dữ liệu từ unit.json
 
-        function showQuiz(key) {
-            document.getElementById('list-view').style.display = 'none';
-            document.getElementById('quiz-view').style.display = 'block';
-            const unit = allData[key];
-            document.getElementById('title').innerText = unit.title;
-            const qBox = document.getElementById('questions');
-            qBox.innerHTML = unit.questions.map((q, i) => `
-                <p><b>Câu ${i+1}: ${q.question}</b></p>
-                ${q.options.map((opt, j) => `<label class="option"><input type="radio" name="q${i}" value="${j}"> ${opt}</label>`).join('')}
-            `).join('');
+    // 1. Tải dữ liệu khi vào trang
+    async function initStudyPage() {
+        try {
+            // Lấy tên user
+            const userRes = await fetch('/api/user-status');
+            const userData = await userRes.json();
+            document.getElementById('user-display').innerText = userData.loggedIn ? "Chào, " + userData.username : "Chưa đăng nhập";
 
-            document.getElementById('submit').onclick = () => {
-                let s = 0;
-                unit.questions.forEach((q, i) => {
-                    const sel = document.querySelector(`input[name="q${i}"]:checked`);
-                    if(sel && parseInt(sel.value) === q.correct) s++;
-                });
-                document.getElementById('score').innerText = `Kết quả: ${s}/${unit.questions.length} câu đúng!`;
-            };
+            // Lấy câu hỏi từ JSON
+            const qRes = await fetch('/api/questions');
+            masterData = await qRes.json();
+            
+            renderUnits();
+        } catch (err) {
+            console.error("Không tải được dữ liệu:", err);
         }
-    </script>
+    }
+
+    // 2. Hiển thị 12 Unit
+    function renderUnits() {
+        const container = document.getElementById('unit-container');
+        container.innerHTML = "";
+        for (let i = 1; i <= 12; i++) {
+            const unitInfo = masterData[i] || { title: "Đang cập nhật nội dung..." };
+            container.innerHTML += `
+                <div class="unit-card" onclick="openUnit('${i}')">
+                    <h3>Unit ${i}</h3>
+                    <p style="color:#666;">${unitInfo.title}</p>
+                    <small style="color:#1a73e8;">Bấm để làm bài →</small>
+                </div>
+            `;
+        }
+    }
+
+    // 3. Mở bài tập của 1 Unit
+    function openUnit(id) {
+        const unit = masterData[id];
+        if (!unit || !unit.questions || unit.questions.length === 0) {
+            alert("Bài học này đang được soạn thảo, vui lòng quay lại sau!");
+            return;
+        }
+
+        document.getElementById('unit-list-view').style.display = 'none';
+        document.getElementById('quiz-area').style.display = 'block';
+        document.getElementById('current-unit-title').innerText = unit.title;
+        document.getElementById('result-box').innerText = "";
+
+        const qList = document.getElementById('questions-list');
+        qList.innerHTML = unit.questions.map((q, i) => `
+            <div class="question-item">
+                <div class="question-text">${i+1}. ${q.question}</div>
+                ${q.options.map((opt, j) => `
+                    <label class="option-label">
+                        <input type="radio" name="question_${i}" value="${j}"> ${opt}
+                    </label>
+                `).join('')}
+            </div>
+        `).join('');
+
+        // Xử lý nộp bài
+        document.getElementById('submit-btn').onclick = () => {
+            let score = 0;
+            unit.questions.forEach((q, i) => {
+                const selected = document.querySelector(`input[name="question_${i}"]:checked`);
+                if (selected && parseInt(selected.value) === q.correct) {
+                    score++;
+                }
+            });
+            document.getElementById('result-box').innerText = `KẾT QUẢ: ${score} / ${unit.questions.length} CÂU ĐÚNG`;
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        };
+    }
+
+    function goBack() {
+        document.getElementById('unit-list-view').style.display = 'block';
+        document.getElementById('quiz-area').style.display = 'none';
+    }
+
+    // Chạy khởi tạo
+    initStudyPage();
+</script>
 </body>
 </html>
