@@ -1,27 +1,51 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8"><title>Tiếng Anh 8 - Home</title>
+    <meta charset="UTF-8">
+    <title>Tiếng Anh 8 - Hệ Thống Bài Học</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; text-align: center; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); height: 160px; display: flex; flex-direction: column; justify-content: space-between; }
-        .btn { background: #1a73e8; color: white; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; }
-        .off { opacity: 0.6; background: #eee; }
+        :root { --blue: #1a73e8; --dark: #202124; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; margin: 0; padding-top: 60px; }
+        /* Thanh điều hướng */
+        .navbar { background: white; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 50px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: fixed; top: 0; width: 100%; z-index: 1000; box-sizing: border-box; }
+        .nav-links a { text-decoration: none; color: var(--blue); font-weight: bold; margin-left: 20px; border: 1px solid var(--blue); padding: 5px 15px; border-radius: 5px; }
+        .nav-links a:hover { background: var(--blue); color: white; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee; transition: 0.3s; height: 160px; display: flex; flex-direction: column; justify-content: space-between; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .btn { background: var(--blue); color: white; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
-    <h1>CHƯƠNG TRÌNH TIẾNG ANH 8</h1>
+    <nav class="navbar">
+        <div style="font-weight: bold; color: var(--dark); font-size: 1.2em;">TIẾNG ANH 8</div>
+        <div class="nav-links">
+            <a href="/login">Đăng Nhập</a>
+            <a href="/register">Đăng Ký</a>
+        </div>
+    </nav>
+
+    <h1 style="text-align: center; color: var(--dark);">DANH SÁCH BÀI HỌC</h1>
     <div id="unit-grid" class="grid"></div>
+
     <script>
-        const units = { 1: "Leisure Activities", 2: "Life in the Countryside", 3: "Teenagers", 4: "Ethnic Groups", 5: "Customs & Traditions", 6: "Lifestyles", 7: "Environment", 8: "Shopping", 9: "Natural Disasters" };
+        // Cập nhật đầy đủ 12 Unit để không còn báo "Đang soạn"
+        const units = {
+            1: "Leisure Activities", 2: "Life in the Countryside", 3: "Teenagers",
+            4: "Ethnic Groups of Vietnam", 5: "Our Customs and Traditions", 6: "Lifestyles",
+            7: "Environmental Protection", 8: "Shopping", 9: "Natural Disasters",
+            10: "Communication in the Future", 11: "Science and Technology", 12: "Life on Other Planets"
+        };
+
         const grid = document.getElementById('unit-grid');
         for (let i = 1; i <= 12; i++) {
-            const title = units[i];
             const card = document.createElement('div');
-            card.className = title ? 'card' : 'card off';
-            card.innerHTML = `<h3>Unit ${i}</h3><p>${title || "Đang soạn..."}</p>` + 
-                (title ? `<a href="/study?u=${i}" class="btn">VÀO HỌC</a>` : `<button class="btn" style="background:#ccc" disabled>CHƯA MỞ</button>`);
+            card.className = 'card';
+            card.innerHTML = `
+                <div><h3>Unit ${i}</h3><p>${units[i]}</p></div>
+                <a href="/study?u=${i}" class="btn">VÀO HỌC NGAY</a>
+            `;
             grid.appendChild(card);
         }
     </script>
