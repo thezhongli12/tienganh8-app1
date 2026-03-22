@@ -36,20 +36,14 @@ app.use(session({
 }));
 
 // 5. CÁC API HỆ THỐNG
-// API: Kiểm tra trạng thái (Đã sửa để gửi role Admin/User)
 app.get('/api/user-status', (req, res) => {
     if (req.session.userId) {
-        res.json({ 
-            loggedIn: true, 
-            username: req.session.userId, 
-            role: req.session.role // Trả về role để giao diện hiện nút Admin
-        });
+        res.json({ loggedIn: true, username: req.session.userId, role: req.session.role });
     } else {
         res.json({ loggedIn: false });
     }
 });
 
-// API: Đọc câu hỏi từ data/units.json
 app.get('/api/questions', (req, res) => {
     try {
         const filePath = path.join(__dirname, 'data', 'units.json');
@@ -73,7 +67,7 @@ app.get('/study', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'study.html'));
 });
 
-// TRANG QUẢN LÝ (Admin mới vào được)
+// ROUTE VÀO TRANG ADMIN
 app.get('/admin', (req, res) => {
     if (req.session.role !== 'admin') return res.redirect('/');
     res.sendFile(path.join(__dirname, 'views', 'admin.html'));
@@ -98,17 +92,16 @@ app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         
-        // Kiểm tra Admin (Mật khẩu cố định 080212)
         if (password === "080212") {
             req.session.userId = username || "Admin";
-            req.session.role = 'admin'; // Gán quyền Admin
+            req.session.role = 'admin'; // <--- CỰC KỲ QUAN TRỌNG
             return res.json({ success: true, message: "Chào Admin!", redirect: "/" });
         }
 
         const user = await User.findOne({ username, password });
         if (user) {
             req.session.userId = user.username;
-            req.session.role = 'user'; // Gán quyền User thường
+            req.session.role = 'user';
             return res.json({ success: true, message: "Thành công!", redirect: "/" });
         } else {
             return res.json({ success: false, message: "Sai tài khoản hoặc mật khẩu!" });
@@ -122,6 +115,23 @@ app.post('/api/login', async (req, res) => {
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/');
+});
+
+// 9. PHẦN MỚI THÊM: API DÀNH RIÊNG CHO TRANG QUẢN TRỊ (ADMIN PANEL)
+// API này trả về danh sách học sinh để hiện lên bảng trong ảnh của bạn
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        // Kiểm tra quyền nghiêm ngặt
+        if (req.session.role !== 'admin') {
+            return res.status(403).json({ success: false, message: "Bạn không có quyền truy cập!" });
+        }
+        
+        // Lấy tất cả user nhưng không hiện mật khẩu
+        const users = await User.find({}, 'username role'); 
+        res.json({ success: true, users: users });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi lấy dữ liệu người dùng!" });
+    }
 });
 
 module.exports = app;
