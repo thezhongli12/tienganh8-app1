@@ -1,12 +1,20 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "trailingSlash": false,
   "rewrites": [
     { "source": "/", "destination": "/views/index.html" },
     { "source": "/login", "destination": "/views/login.html" },
     { "source": "/register", "destination": "/views/register.html" },
     { "source": "/study", "destination": "/views/study.html" },
     { "source": "/data/(.*)", "destination": "/data/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/data/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Content-Type", "value": "application/json" }
+      ]
+    }
   ]
 }
