@@ -3,54 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tiếng Anh 8 - Học Tập Thông Minh</title>
+    <title>Học Tiếng Anh 8 - Trang Chủ</title>
     <style>
-        :root { --primary: #4f46e5; --bg: #f8fafc; --text: #1e293b; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
-        nav { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
-        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
-        .nav-btns a { text-decoration: none; padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-weight: 600; transition: 0.2s; }
-        .login-btn { color: var(--primary); }
-        .register-btn { background: var(--primary); color: white; margin-left: 1rem; }
-        .hero { padding: 4rem 2rem; text-align: center; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto; padding: 2rem; }
-        .unit-card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: 0.3s; border: 1px solid #e2e8f0; }
-        .unit-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .btn-study { display: block; background: var(--primary); color: white; text-align: center; padding: 0.75rem; border-radius: 0.5rem; text-decoration: none; margin-top: 1.5rem; font-weight: bold; }
-        .locked { filter: grayscale(1); opacity: 0.7; pointer-events: none; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f0f2f5; }
+        nav { background: #1a73e8; color: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .logo { font-size: 24px; font-weight: bold; text-decoration: none; color: white; }
+        .nav-links a { color: white; text-decoration: none; margin-left: 15px; font-weight: 500; transition: 0.3s; }
+        .nav-links a:hover { opacity: 0.8; }
+        .hero { text-align: center; padding: 100px 20px; background: white; margin-bottom: 20px; }
+        .hero h1 { color: #1a73e8; font-size: 48px; }
+        .btn-study { background: #34a853; color: white; padding: 15px 40px; border-radius: 30px; text-decoration: none; font-size: 20px; display: inline-block; margin-top: 20px; box-shadow: 0 4px 15px rgba(52, 168, 83, 0.3); }
     </style>
 </head>
 <body>
-    <nav>
-        <div class="logo">ENGLISH 8</div>
-        <div class="nav-btns" id="auth-btns">
-            <a href="/login" class="login-btn">Đăng nhập</a>
-            <a href="/register" class="register-btn">Bắt đầu miễn phí</a>
-        </div>
-    </nav>
 
-    <div class="hero">
-        <h1>Chương Trình Tiếng Anh 8 Mới</h1>
-        <p>Hệ thống bài tập 12 Unit đầy đủ, bám sát chương trình bộ giáo dục.</p>
+<nav>
+    <a href="/" class="logo">ENGLISH 8</a>
+    <div class="nav-links" id="auth-zone">
+        <a href="/login">Đăng nhập</a>
+        <a href="/register">Đăng ký</a>
     </div>
+</nav>
 
-    <div id="main-grid" class="grid"></div>
+<div class="hero">
+    <h1>Chinh Phục Tiếng Anh Lớp 8</h1>
+    <p>Hệ thống bài tập trắc nghiệm đầy đủ 12 Unit theo chương trình mới.</p>
+    <div id="action-zone">
+        <a href="/login" class="btn-study">Đăng nhập để bắt đầu</a>
+    </div>
+</div>
 
-    <script>
-        // Danh sách 12 Unit
-        const units = ["Leisure Activities", "Life in the Countryside", "Teenagers", "Ethnic Groups", "Customs", "Lifestyles", "Environment", "Shopping", "Disasters", "Communication", "Science", "Planets"];
-        const grid = document.getElementById('main-grid');
-        
-        // Vẽ 12 card bài học
-        units.forEach((name, i) => {
-            grid.innerHTML += `
-                <div class="unit-card">
-                    <span style="color: var(--primary); font-weight: bold;">UNIT ${i+1}</span>
-                    <h3 style="margin: 0.5rem 0;">${name}</h3>
-                    <a href="/study?u=${i+1}" class="btn-study">VÀO HỌC NGAY</a>
-                </div>
-            `;
-        });
-    </script>
+<script>
+    async function checkUserStatus() {
+        try {
+            const res = await fetch('/api/user-status');
+            const data = await res.json();
+            
+            const authZone = document.getElementById('auth-zone');
+            const actionZone = document.getElementById('action-zone');
+
+            if (data.loggedIn) {
+                // 1. Cập nhật thanh Menu
+                let adminLink = data.role === 'admin' ? '<a href="/admin-dashboard" style="color:#fbbc05">★ QUẢN LÝ</a>' : '';
+                authZone.innerHTML = `
+                    <span style="margin-right:10px">Chào, <b>${data.username}</b></span>
+                    ${adminLink}
+                    <a href="/logout" style="background:rgba(255,255,255,0.2); padding:5px 10px; border-radius:5px">Thoát</a>
+                `;
+
+                // 2. Cập nhật nút bấm chính
+                actionZone.innerHTML = `<a href="/study" class="btn-study">VÀO HỌC NGAY</a>`;
+            }
+        } catch (e) {
+            console.log("Chưa đăng nhập hoặc lỗi kết nối");
+        }
+    }
+    checkUserStatus();
+</script>
+
 </body>
 </html>
