@@ -1,39 +1,70 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head><meta charset="UTF-8"><title>Đăng Nhập - English 8</title>
-<style>
-    body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f1f5f9; margin: 0; }
-    .form-box { background: white; padding: 2.5rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
-    input { width: 100%; padding: 0.75rem; margin: 0.5rem 0 1.5rem 0; border: 1px solid #ddd; border-radius: 0.5rem; box-sizing: border-box; }
-    button { width: 100%; padding: 0.75rem; background: #4f46e5; color: white; border: none; border-radius: 0.5rem; font-weight: bold; cursor: pointer; }
-    .error-msg { color: #dc2626; background: #fef2f2; padding: 0.5rem; border-radius: 0.25rem; margin-bottom: 1rem; display: none; }
-</style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - English 8</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f8fafc; margin: 0; }
+        .form-box { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #4f46e5; margin-bottom: 30px; font-weight: 700; font-size: 24px; }
+        .error-msg { color: #dc2626; background: #fef2f2; padding: 12px; border-radius: 10px; margin-bottom: 20px; display: none; text-align: center; font-size: 14px; border: 1px solid #fee2e2; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 14px; }
+        input { width: 100%; padding: 14px; margin-bottom: 20px; border: 1.5px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; transition: 0.3s; font-size: 16px; }
+        input:focus { border-color: #4f46e5; outline: none; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        button { width: 100%; padding: 14px; background: #4f46e5; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 16px; margin-top: 10px; }
+        button:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 5px 15px rgba(79, 70, 229, 0.2); }
+        .reg-link { text-align: center; margin-top: 25px; font-size: 14px; color: #64748b; }
+        .reg-link a { color: #4f46e5; text-decoration: none; font-weight: 600; }
+    </style>
 </head>
 <body>
     <div class="form-box">
         <h2>Đăng nhập</h2>
         <div id="error" class="error-msg"></div>
         <form id="loginForm">
-            <input type="text" id="u" placeholder="Tên đăng nhập" required>
-            <input type="password" id="p" placeholder="Mật khẩu" required>
-            <button type="submit">Vào học ngay</button>
+            <label>Tên đăng nhập</label>
+            <input type="text" id="u" placeholder="Nhập tên tài khoản" required>
+            <label>Mật khẩu</label>
+            <input type="password" id="p" placeholder="Nhập mật khẩu" required>
+            <button type="submit">VÀO HỌC NGAY</button>
         </form>
-        <p style="text-align:center; margin-top:1rem;">Chưa có tài khoản? <a href="/register">Đăng ký ngay</a></p>
+        <p class="reg-link">Chưa có tài khoản? <a href="/register">Đăng ký ngay</a></p>
     </div>
+
     <script>
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
             const errDiv = document.getElementById('error');
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({username: document.getElementById('u').value, password: document.getElementById('p').value})
-            });
-            const data = await res.json();
-            if(data.success) window.location.href = "/";
-            else {
-                errDiv.innerText = data.message;
+            const btn = e.target.querySelector('button');
+            
+            btn.innerText = "Đang xử lý...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        username: document.getElementById('u').value, 
+                        password: document.getElementById('p').value
+                    })
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    window.location.href = "/";
+                } else {
+                    errDiv.innerText = "⚠️ " + data.message;
+                    errDiv.style.display = 'block';
+                    btn.innerText = "VÀO HỌC NGAY";
+                    btn.disabled = false;
+                }
+            } catch(err) {
+                errDiv.innerText = "❌ Lỗi kết nối Server!";
                 errDiv.style.display = 'block';
+                btn.disabled = false;
             }
         };
     </script>
