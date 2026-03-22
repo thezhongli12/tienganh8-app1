@@ -1,11 +1,13 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     { "source": "/", "destination": "/views/index.html" },
     { "source": "/login", "destination": "/views/login.html" },
     { "source": "/register", "destination": "/views/register.html" },
     { "source": "/study", "destination": "/views/study.html" },
+    { "source": "/quiz", "destination": "/views/quiz.html" },
     { "source": "/data/(.*)", "destination": "/data/$1" }
   ]
 }
