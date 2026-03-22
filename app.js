@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
-const fs = require('fs');
+const fs = require('fs'); // THÊM MỚI: Để đọc file unit.json
 
 const app = express();
 const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/tienganh8?retryWrites=true&w=majority";
@@ -18,11 +18,11 @@ const User = mongoose.model('User', new mongoose.Schema({
     password: { type: String, minlength: 8 }
 }));
 
-// 2. MIDDLEWARE & SESSION
+// 2. MIDDLEWARE & SESSION (Giữ nguyên cấu trúc cũ)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-    secret: '080212',
+    secret: '080212', // Dùng pass admin làm secret luôn cho đồng bộ
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({ mongoUrl: mongoURI, serverSelectionTimeoutMS: 5000 }),
@@ -31,61 +31,86 @@ app.use(session({
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 3. API HỆ THỐNG
+// --- CÁC API THÊM MỚI ĐỂ ĐIỀU KHIỂN WEB ---
+
+// API 1: Kiểm tra ai đang đăng nhập
 app.get('/api/user-status', (req, res) => {
-    res.json(req.session.userId ? { loggedIn: true, username: req.session.userId, role: req.session.role } : { loggedIn: false });
+    if (req.session.userId) {
+        res.json({ loggedIn: true, username: req.session.userId, role: req.session.role });
+    } else {
+        res.json({ loggedIn: false });
+    }
 });
 
-// Đọc file unit.json
+// API 2: Đọc file unit.json gửi cho trang Study
 app.get('/api/questions', (req, res) => {
-    if (!req.session.userId) return res.status(401).json({ message: "Vui lòng đăng nhập" });
-    const data = fs.readFileSync(path.join(__dirname, 'unit.json'), 'utf8');
-    res.json(JSON.parse(data));
+    try {
+        const data = fs.readFileSync(path.join(__dirname, 'unit.json'), 'utf8');
+        res.json(JSON.parse(data));
+    } catch (err) {
+        res.status(500).json({ error: "Không tìm thấy file unit.json" });
+    }
 });
 
-// Lấy danh sách user cho Admin
+// API 3: Lấy danh sách user (Chỉ Admin mới xem được)
 app.get('/api/admin/users', async (req, res) => {
-    if (req.session.role !== 'admin') return res.status(403).json([]);
+    if (req.session.role !== 'admin') return res.status(403).send("Từ chối");
     const users = await User.find({}, 'username');
     res.json(users);
 });
 
-// 4. ĐIỀU HƯỚNG ROUTE
+// --- ĐIỀU HƯỚNG CÁC TRANG (Giữ nguyên + Thêm trang Admin) ---
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'views', 'register.html')));
+
 app.get('/study', (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
     res.sendFile(path.join(__dirname, 'views', 'study.html'));
 });
+
 app.get('/admin-dashboard', (req, res) => {
     if (req.session.role !== 'admin') return res.redirect('/login');
     res.sendFile(path.join(__dirname, 'views', 'admin.html'));
 });
 
-// 5. LOGIC AUTH (Đăng ký/Đăng nhập)
+// --- LOGIC ĐĂNG KÝ / ĐĂNG NHẬP (Sửa lại để phân loại Admin) ---
+
 app.post('/api/register', async (req, res) => {
     const { username, password } = req.body;
+    if (username.length < 6 || password.length < 8) {
+        return res.json({ success: false, message: "Tên ≥ 6, MK ≥ 8 ký tự!" });
+    }
     try {
         await new User({ username, password }).save();
         res.json({ success: true });
-    } catch (e) { res.json({ success: false, message: "Tên quá ngắn hoặc đã tồn tại!" }); }
+    } catch (e) {
+        res.json({ success: false, message: "Tài khoản đã tồn tại!" });
+    }
 });
 
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
+
+    // KIỂM TRA QUYỀN ADMIN (Mật khẩu 080212)
     if (password === "080212") {
-        req.session.userId = username || "Admin";
+        req.session.userId = username || "Admin_Chinh";
         req.session.role = 'admin';
         return res.json({ success: true, redirect: "/admin-dashboard" });
     }
-    const user = await User.findOne({ username });
-    if (user && user.password === password) {
-        req.session.userId = username;
-        req.session.role = 'user';
-        return res.json({ success: true, redirect: "/study" });
+
+    // KIỂM TRA USER THƯỜNG
+    try {
+        const user = await User.findOne({ username });
+        if (user && user.password === password) {
+            req.session.userId = username;
+            req.session.role = 'user';
+            return res.json({ success: true, redirect: "/study" });
+        }
+        res.json({ success: false, message: "Sai tài khoản hoặc mật khẩu!" });
+    } catch (err) {
+        res.json({ success: false, message: "Lỗi kết nối Database!" });
     }
-    res.json({ success: false, message: "Sai tài khoản hoặc mật khẩu!" });
 });
 
 app.get('/logout', (req, res) => {
