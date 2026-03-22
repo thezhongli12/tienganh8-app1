@@ -7,34 +7,18 @@
       "use": "@vercel/node"
     },
     {
-      "src": "views/**/*.html",
+      "src": "views/*.html",
       "use": "@vercel/static"
     }
   ],
   "routes": [
-    {
-      "src": "/login",
-      "dest": "/views/login.html"
-    },
-    {
-      "src": "/register",
-      "dest": "/views/register.html"
-    },
-    {
-      "src": "/index",
-      "dest": "/views/index.html"
-    },
-    {
-      "src": "/study",
-      "dest": "/views/study.html"
-    },
-    {
-      "src": "/data/(.*)",
-      "dest": "/data/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "app.js"
-    }
+    { "src": "/login", "dest": "/views/login.html" },
+    { "src": "/register", "dest": "/views/register.html" },
+    { "src": "/index", "dest": "/views/index.html" },
+    { "src": "/study", "dest": "/views/study.html" },
+    { "src": "/quiz", "dest": "/views/quiz.html" },
+    { "src": "/admin", "dest": "/views/admin.html" },
+    { "src": "/data/(.*)", "dest": "/data/$1" },
+    { "src": "/(.*)", "dest": "app.js" }
   ]
 }
