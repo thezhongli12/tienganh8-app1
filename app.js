@@ -5,10 +5,17 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
 const app = express();
-const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/?appName=Cluster0";
 
-// 1. Kết nối Database
-mongoose.connect(mongoURI).then(() => console.log('✅ Hệ thống đã sẵn sàng'));
+// CHỈNH SỬA QUAN TRỌNG: Thêm 'tienganh8' vào trước dấu '?' để trỏ đúng Database
+const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/tienganh8?retryWrites=true&w=majority";
+
+// 1. Kết nối Database với cơ chế chống sập Server (catch error)
+mongoose.connect(mongoURI)
+    .then(() => console.log('✅ Đã kết nối MongoDB với tư cách ADMIN'))
+    .catch(err => {
+        console.error('❌ Lỗi kết nối Database:', err.message);
+        // Không làm sập app, cho phép Admin đăng nhập bằng code cứng
+    });
 
 const User = mongoose.model('User', new mongoose.Schema({
     username: { type: String, unique: true, minlength: 6 },
@@ -22,83 +29,58 @@ app.use(session({
     secret: '080212',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: mongoURI }),
-    cookie: { maxAge: 1000 * 60 * 60 * 24 } // Lưu đăng nhập trong 1 ngày
+    store: MongoStore.create({ 
+        mongoUrl: mongoURI,
+        serverSelectionTimeoutMS: 5000 // Tự ngắt sau 5s nếu DB lỗi để tránh lỗi 500
+    }),
+    cookie: { maxAge: 1000 * 60 * 60 * 24 } 
 }));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 3. ĐIỀU HƯỚNG TRANG (GET Routes)
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'index.html'));
-});
-
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'login.html'));
-});
-
-app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'register.html'));
-});
+// 3. ĐIỀU HƯỚNG TRANG
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views', 'index.html')));
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html')));
+app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'views', 'register.html')));
 
 app.get('/study', (req, res) => {
-    // CHẶN NGƯỜI DÙNG: Phải đăng nhập mới được vào học
-    if (!req.session.userId) {
-        return res.redirect('/login');
-    }
+    if (!req.session.userId) return res.redirect('/login');
     res.sendFile(path.join(__dirname, 'views', 'study.html'));
 });
 
-// 4. LOGIC ĐĂNG KÝ (POST /api/register)
+// 4. LOGIC ĐĂNG KÝ (Tên >= 6, MK >= 8)
 app.post('/api/register', async (req, res) => {
     const { username, password } = req.body;
-    
-    // Kiểm tra độ dài ngay tại server để đảm bảo an toàn
-    if (!username || username.length < 6) {
-        return res.json({ success: false, message: "Tên đăng nhập phải có ít nhất 6 ký tự!" });
+    if (!username || username.length < 6 || !password || password.length < 8) {
+        return res.json({ success: false, message: "Tên đăng nhập ≥ 6, Mật khẩu ≥ 8 ký tự!" });
     }
-    if (!password || password.length < 8) {
-        return res.json({ success: false, message: "Mật khẩu phải có ít nhất 8 ký tự!" });
-    }
-
     try {
-        const newUser = new User({ username, password });
-        await newUser.save();
+        await new User({ username, password }).save();
         res.json({ success: true });
     } catch (e) {
-        res.json({ success: false, message: "Tên đăng nhập này đã có người sử dụng!" });
+        res.json({ success: false, message: "Tài khoản đã tồn tại hoặc Database đang lỗi!" });
     }
 });
 
-// 5. LOGIC ĐĂNG NHẬP (POST /api/login) - PHÂN BIỆT LỖI CHI TIẾT
+// 5. LOGIC ĐĂNG NHẬP (Ưu tiên Admin 080212)
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
 
-    // Ưu tiên cho Admin (Sử dụng mật khẩu bí mật của bạn)
+    // QUYỀN ADMIN TUYỆT ĐỐI: Vào được ngay cả khi Database lỗi xác thực
     if (password === "080212") {
-        req.session.userId = username;
-        return res.json({ success: true, message: "Chào Admin!" });
+        req.session.userId = username || "Admin";
+        return res.json({ success: true, message: "Chào Admin hệ thống!" });
     }
 
     try {
-        // Bước 1: Tìm xem tài khoản có tồn tại không
         const user = await User.findOne({ username });
-        
-        if (!user) {
-            return res.json({ success: false, message: "Tài khoản không tồn tại. Vui lòng đăng ký!" });
-        }
+        if (!user) return res.json({ success: false, message: "Tài khoản không tồn tại. Hãy đăng ký!" });
+        if (user.password !== password) return res.json({ success: false, message: "Mật khẩu không chính xác!" });
 
-        // Bước 2: Nếu tồn tại, kiểm tra mật khẩu
-        if (user.password !== password) {
-            return res.json({ success: false, message: "Mật khẩu không chính xác. Thử lại nhé!" });
-        }
-
-        // Đăng nhập thành công
         req.session.userId = username;
         res.json({ success: true });
-
     } catch (error) {
-        res.json({ success: false, message: "Lỗi hệ thống, vui lòng thử lại sau!" });
+        res.json({ success: false, message: "Lỗi kết nối dữ liệu, hãy thử lại sau!" });
     }
 });
 
