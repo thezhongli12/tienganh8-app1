@@ -1,28 +1,31 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head><meta charset="UTF-8"><title>Đăng Ký</title></head>
-<body style="text-align:center; font-family:sans-serif; padding-top:50px;">
-    <h2>ĐĂNG KÝ</h2>
+<body style="text-align:center; padding-top:50px; font-family:sans-serif;">
+    <h2>ĐĂNG KÝ TÀI KHOẢN</h2>
     <form id="regForm">
-        <input type="text" id="u" placeholder="Tên đăng nhập (≥6 ký tự)" required><br><br>
-        <input type="password" id="p" placeholder="Mật khẩu (≥8 ký tự)" required><br><br>
+        <input type="text" id="user" placeholder="Tên đăng nhập (≥6 ký tự)" required><br><br>
+        <input type="password" id="pass" placeholder="Mật khẩu (≥8 ký tự)" required><br><br>
         <button type="submit">Đăng Ký</button>
     </form>
     <script>
         document.getElementById('regForm').onsubmit = async (e) => {
             e.preventDefault();
-            const u = document.getElementById('u').value;
-            const p = document.getElementById('p').value;
-            if(u.length < 6 || p.length < 8) return alert("Chưa đủ độ dài yêu cầu!");
-            
-            const res = await fetch('/api/register', {
+            const res = await fetch('/api/register', { // Khớp với app.post('/api/register') của bạn
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({username: u, password: p})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('user').value,
+                    password: document.getElementById('pass').value
+                })
             });
             const data = await res.json();
-            if(data.success) { alert("Đăng ký thành công!"); window.location.href="/login"; }
-            else alert(data.message);
+            if (data.success) {
+                alert("Đăng ký thành công!");
+                window.location.href = "/login";
+            } else {
+                alert("Lỗi: " + data.message);
+            }
         };
     </script>
 </body>
