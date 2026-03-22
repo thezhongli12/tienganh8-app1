@@ -7,7 +7,7 @@ const fs = require('fs');
 
 const app = express();
 
-// 1. CẤU HÌNH DATABASE (Dùng mật khẩu admin 080212 của bạn)
+// 1. CẤU HÌNH DATABASE (Sử dụng mật khẩu admin 080212)
 const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/tienganh8?retryWrites=true&w=majority";
 
 mongoose.connect(mongoURI)
@@ -22,11 +22,11 @@ const User = mongoose.model('User', new mongoose.Schema({
 }));
 
 // 3. CẤU HÌNH MIDDLEWARE
-app.use(express.json()); // Để đọc được dữ liệu JSON gửi lên
-app.use(express.urlencoded({ extended: true })); // Để đọc dữ liệu từ Form
-app.use(express.static(path.join(__dirname, 'public'))); // Thư mục chứa CSS, Ảnh
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true })); 
+app.use(express.static(path.join(__dirname, 'public'))); 
 
-// 4. CẤU HÌNH SESSION (Giúp tài khoản không bị thoát ra khi load lại trang)
+// 4. CẤU HÌNH SESSION
 app.use(session({
     secret: 'secret_key_080212',
     resave: false,
@@ -36,7 +36,7 @@ app.use(session({
 }));
 
 // 5. CÁC API HỆ THỐNG
-// API: Kiểm tra xem user đã đăng nhập chưa
+// API: Kiểm tra trạng thái đăng nhập
 app.get('/api/user-status', (req, res) => {
     if (req.session.userId) {
         res.json({ loggedIn: true, username: req.session.userId, role: req.session.role });
@@ -70,29 +70,53 @@ app.get('/study', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'study.html'));
 });
 
-// 7. XỬ LÝ ĐĂNG NHẬP
-app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
-    
-    // Kiểm tra quyền Admin bằng mật khẩu 080212
-    if (password === "080212") {
-        req.session.userId = username || "Admin";
-        req.session.role = 'admin';
-        return res.json({ success: true, redirect: "/" });
-    }
+// 7. XỬ LÝ ĐĂNG KÝ & ĐĂNG NHẬP
 
-    // Kiểm tra User bình thường trong Database
+// --- API ĐĂNG KÝ ---
+app.post('/api/register', async (req, res) => {
     try {
+        const { username, password } = req.body;
+        if (!username || !password) {
+            return res.json({ success: false, message: "Vui lòng nhập đầy đủ thông tin!" });
+        }
+
+        const userExists = await User.findOne({ username });
+        if (userExists) {
+            return res.json({ success: false, message: "Tên đăng nhập đã tồn tại!" });
+        }
+
+        const newUser = new User({ username, password, role: 'user' });
+        await newUser.save();
+        res.json({ success: true, message: "Đăng ký thành công!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi hệ thống khi đăng ký!" });
+    }
+});
+
+// --- API ĐĂNG NHẬP ---
+app.post('/api/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        // Kiểm tra quyền Admin bằng mật khẩu 080212
+        if (password === "080212") {
+            req.session.userId = username || "Admin";
+            req.session.role = 'admin';
+            return res.json({ success: true, message: "Chào Admin!", redirect: "/" });
+        }
+
+        // Kiểm tra User bình thường trong Database
         const user = await User.findOne({ username, password });
         if (user) {
             req.session.userId = user.username;
             req.session.role = 'user';
-            return res.json({ success: true, redirect: "/" });
+            return res.json({ success: true, message: "Đăng nhập thành công!", redirect: "/" });
         } else {
-            res.json({ success: false, message: "Sai tài khoản hoặc mật khẩu!" });
+            // Trả về thông báo lỗi cụ thể để Frontend hiển thị
+            return res.json({ success: false, message: "Sai tài khoản hoặc mật khẩu!" });
         }
     } catch (err) {
-        res.status(500).json({ success: false, message: "Lỗi hệ thống!" });
+        res.status(500).json({ success: false, message: "Lỗi hệ thống đăng nhập!" });
     }
 });
 
