@@ -2,98 +2,68 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title><%= lesson.title %></title>
+    <title>Luyện Tập - Tiếng Anh 8</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; line-height: 1.6; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .q-card { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 10px; transition: 0.3s; }
-        .correct { border: 2px solid #2ecc71; background: #eafff2; }
-        .wrong { border: 2px solid #e74c3c; background: #fff2f1; }
-        .score-box { display: none; text-align: center; background: #2c3e50; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .opt { border: 1px solid #ccc; padding: 10px; border-radius: 5px; cursor: pointer; }
-        .btn { background: #4a90e2; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 17px; }
+        body { font-family: 'Arial', sans-serif; background: #eef2f7; margin: 0; padding: 20px; }
+        .header { display: flex; align-items: center; background: white; padding: 10px 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-back { background: #f44336; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-right: 20px; }
+        .quiz-box { background: white; padding: 30px; border-radius: 15px; max-width: 600px; margin: 0 auto; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .option-btn { display: block; width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; text-align: left; font-size: 16px; }
+        .option-btn:hover { background: #f0f7ff; border-color: #2196F3; }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <div id="result" class="score-box">
-        <h2 id="totalScore">Điểm: 0/0</h2>
-        <a href="/" style="color: #3498db; text-decoration: none;">Về trang chủ</a>
+    <div class="header">
+        <button class="btn-back" onclick="location.href='./index.html'">⬅ Quay về Menu</button>
+        <h2 id="title">Đang tải...</h2>
     </div>
 
-    <h1><%= lesson.title %></h1>
-    <form id="quizForm">
-        <% questions.forEach((item, index) => { %>
-            <div class="q-card" id="card-<%= index %>" data-ans="<%= item.answer %>" data-type="<%= item.type %>">
-                <p><strong>Câu <%= index + 1 %>:</strong> <%= item.q %></p>
-                
-                <% if(item.options) { %>
-                    <div class="options">
-                        <% item.options.forEach((opt, idx) => { let L = String.fromCharCode(65+idx); %>
-                            <label class="opt">
-                                <input type="radio" name="ans-<%= index %>" value="<%= L %>" required> <%= L %>. <%= opt %>
-                            </label>
-                        <% }) %>
-                    </div>
-                <% } else { %>
-                    <input type="text" name="ans-<%= index %>" placeholder="Nhập đáp án..." style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc;">
-                <% } %>
-                <p id="msg-<%= index %>" style="font-weight:bold; margin-top:10px;"></p>
-            </div>
-        <% }) %>
-        <button type="button" class="btn" onclick="submitQuiz()">Nộp bài & Lưu điểm</button>
-    </form>
-</div>
+    <div class="quiz-box">
+        <div id="question" style="font-size: 20px; font-weight: bold; margin-bottom: 20px;"></div>
+        <div id="options"></div>
+    </div>
 
-<script>
-async function submitQuiz() {
-    const cards = document.querySelectorAll('.q-card');
-    let correctCount = 0;
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const unitId = urlParams.get('u') || 1;
+        let questions = [];
+        let currentIdx = 0;
 
-    cards.forEach((card, i) => {
-        const type = card.dataset.type;
-        const answer = card.dataset.ans.trim().toLowerCase();
-        let userAns = "";
-
-        if(type.includes('choice') || type === 'reading') {
-            const picked = document.querySelector(`input[name="ans-${i}"]:checked`);
-            userAns = picked ? picked.value.toLowerCase() : "";
-        } else {
-            userAns = document.querySelector(`input[name="ans-${i}"]`).value.trim().toLowerCase();
+        async function startQuiz() {
+            const res = await fetch('../data/units.json');
+            const data = await res.json();
+            questions = data[`unit${unitId}`].questions;
+            document.getElementById('title').innerText = `Luyện tập Unit ${unitId}`;
+            renderQuestion();
         }
 
-        const msg = document.getElementById('msg-' + i);
-        if(userAns === answer) {
-            correctCount++;
-            card.className = "q-card correct";
-            msg.innerText = "✅ Đúng!";
-            msg.style.color = "green";
-        } else {
-            card.className = "q-card wrong";
-            msg.innerText = "❌ Sai. Đáp án: " + answer.toUpperCase();
-            msg.style.color = "red";
+        function renderQuestion() {
+            const q = questions[currentIdx];
+            document.getElementById('question').innerText = `Câu ${currentIdx + 1}: ${q.text || q.q}`;
+            
+            const optDiv = document.getElementById('options');
+            optDiv.innerHTML = '';
+            
+            const choices = q.options || q.answers || [];
+            choices.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    if(i === q.correct) alert("Chính xác! 🎉");
+                    else alert("Tiếc quá, sai rồi! ❌");
+                    
+                    currentIdx++;
+                    if(currentIdx < questions.length) renderQuestion();
+                    else {
+                        alert("Chúc mừng! Bạn đã hoàn thành bài học.");
+                        location.href = './index.html';
+                    }
+                };
+                optDiv.appendChild(btn);
+            });
         }
-    });
-
-    const percent = Math.round((correctCount / cards.length) * 100);
-    
-    // Lưu điểm vào DB qua API
-    await fetch('/save-score', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            lessonTitle: "<%= lesson.title %>",
-            score: `${correctCount}/${cards.length}`,
-            percentage: percent
-        })
-    });
-
-    document.getElementById('result').style.display = "block";
-    document.getElementById('totalScore').innerText = `Kết quả: ${correctCount}/${cards.length} (${percent}%)`;
-    window.scrollTo(0, 0);
-}
-</script>
+        startQuiz();
+    </script>
 </body>
 </html>
