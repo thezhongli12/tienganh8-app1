@@ -1,47 +1,113 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8"><title>Học Tập</title>
+    <meta charset="UTF-8">
+    <title>Học Tập - Tiếng Anh 8</title>
     <style>
-        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
-        .box { background: white; max-width: 600px; margin: auto; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .btn-back { background: #d93025; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; display: inline-block; margin-bottom: 20px; }
-        .opt { display: block; width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; text-align: left; }
-        .opt:hover { background: #f0f7ff; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; }
+        nav { background: #1a73e8; color: white; padding: 15px 5%; display: flex; justify-content: space-between; }
+        .container { max-width: 800px; margin: 30px auto; padding: 20px; }
+        .unit-card { background: white; padding: 20px; margin-bottom: 10px; border-radius: 10px; cursor: pointer; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .unit-card:hover { transform: translateX(10px); background: #e8f0fe; }
+        .quiz-container { background: white; padding: 30px; border-radius: 15px; display: none; }
+        .question { margin-bottom: 20px; font-weight: bold; color: #2c3e50; }
+        .option { display: block; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; }
+        .option:hover { background: #f8f9fa; }
+        .btn-back { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
+        .score { font-size: 20px; color: #1a73e8; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <a href="/" class="btn-back">← Quay về Menu</a>
-        <h2 id="title">Đang tải...</h2>
-        <div id="quiz-content"></div>
+
+<nav>
+    <span>ENGLISH 8 - KHÓA HỌC</span>
+    <span id="user-name">Đang tải...</span>
+</nav>
+
+<div class="container">
+    <div id="unit-list">
+        <h2>Chọn Unit để bắt đầu học:</h2>
+        <div id="units"></div>
     </div>
 
-    <script>
-        const lessons = {
-            "1": { t: "Unit 1: Leisure Activities", q: "I love _______ origami.", a: ["doing", "making", "playing"], c: 1 },
-            "2": { t: "Unit 2: Countryside", q: "Harvest time is _______ than usual.", a: ["busier", "more busy"], c: 0 },
-            "3": { t: "Unit 3: Teenagers", q: "He is _______ pressure from his parents.", a: ["under", "in", "with"], c: 0 },
-            "4": { t: "Unit 4: Ethnic Groups", q: "The Rong house is _______.", a: ["tall", "unique", "small"], c: 1 },
-            "5": { t: "Unit 5: Traditions", q: "You should _______ your hat when inside.", a: ["take off", "put on"], c: 0 },
-            "6": { t: "Unit 6: Lifestyles", q: "The _______ of the Thai is very rich.", a: ["culture", "food"], c: 0 },
-            "7": { t: "Unit 7: Environment", q: "We should _______ our carbon footprint.", a: ["reduce", "increase"], c: 0 },
-            "8": { t: "Unit 8: Shopping", q: "They are looking for _______.", a: ["bargains", "sales"], c: 0 },
-            "9": { t: "Unit 9: Disasters", q: "A _______ hit the coastal village.", a: ["typhoon", "rain"], c: 0 },
-            "10": { t: "Unit 10: Communication", q: "We'll use _______ to send messages.", a: ["emojis", "letters"], c: 0 },
-            "11": { t: "Unit 11: Science", q: "AI will _______ many jobs.", a: ["replace", "do"], c: 0 },
-            "12": { t: "Unit 12: Planets", q: "Can humans _______ on Mars?", a: ["live", "stay"], c: 0 }
-        };
+    <div id="quiz-area" class="quiz-container">
+        <button class="btn-back" onclick="showUnits()">← Quay lại danh sách</button>
+        <h2 id="quiz-title"></h2>
+        <div id="questions-content"></div>
+        <button id="submit-btn" style="background:#34a853; color:white; width:100%; padding:15px; border:none; border-radius:10px; font-size:18px; cursor:pointer; margin-top:20px;">NỘP BÀI</button>
+        <div id="result" class="score" style="margin-top:20px;"></div>
+    </div>
+</div>
 
-        const uId = new URLSearchParams(window.location.search).get('u') || "1";
-        const lesson = lessons[uId];
-        if (lesson) {
-            document.getElementById('title').innerText = lesson.t;
-            document.getElementById('quiz-content').innerHTML = `<p><b>Câu hỏi:</b> ${lesson.q}</p>` + 
-                lesson.a.map((opt, i) => `<button class="opt" onclick="alert('${i==lesson.c ? 'Chính xác! 🎉' : 'Sai rồi! ❌'}')">${opt}</button>`).join('');
-        } else {
-            document.getElementById('title').innerText = "Nội dung đang cập nhật...";
+<script>
+    // Dữ liệu mẫu 12 Unit (Bạn có thể thêm câu hỏi vào đây)
+    const data = {
+        1: { title: "Unit 1: Leisure Time", questions: [
+            { q: "What do you like doing in your free time?", a: ["I like swimming", "I am a student", "It is hot", "No, I don't"], correct: 0 },
+            { q: "She is fond ____ reading books.", a: ["on", "at", "of", "with"], correct: 2 }
+        ]},
+        2: { title: "Unit 2: Life in the Countryside", questions: [
+            { q: "The sky is ____ than in the city.", a: ["blue", "bluer", "more blue", "bluest"], correct: 1 }
+        ]},
+        // ... Thêm tiếp cho đến Unit 12
+    };
+
+    // Tạo danh sách Unit tự động
+    function loadUnits() {
+        const container = document.getElementById('units');
+        for (let i = 1; i <= 12; i++) {
+            container.innerHTML += `
+                <div class="unit-card" onclick="startQuiz(${i})">
+                    <span>Unit ${i}: ${data[i]?.title || "Nội dung đang cập nhật"}</span>
+                    <span style="color:#1a73e8; font-weight:bold;">▶</span>
+                </div>
+            `;
         }
-    </script>
+    }
+
+    function startQuiz(unitId) {
+        const unit = data[unitId];
+        if (!unit) return alert("Bài học này đang được chuẩn bị!");
+        
+        document.getElementById('unit-list').style.display = 'none';
+        document.getElementById('quiz-area').style.display = 'block';
+        document.getElementById('quiz-title').innerText = unit.title;
+        
+        const content = document.getElementById('questions-content');
+        content.innerHTML = unit.questions.map((q, i) => `
+            <div class="question">${i+1}. ${q.q}</div>
+            ${q.a.map((opt, j) => `
+                <label class="option">
+                    <input type="radio" name="q${i}" value="${j}"> ${opt}
+                </label>
+            `).join('')}
+        `).join('');
+
+        document.getElementById('submit-btn').onclick = () => checkResult(unitId);
+    }
+
+    function checkResult(unitId) {
+        const unit = data[unitId];
+        let score = 0;
+        unit.questions.forEach((q, i) => {
+            const selected = document.querySelector(`input[name="q${i}"]:checked`);
+            if (selected && parseInt(selected.value) === q.correct) score++;
+        });
+        document.getElementById('result').innerText = `Bạn đúng: ${score}/${unit.questions.length} câu!`;
+    }
+
+    function showUnits() {
+        document.getElementById('unit-list').style.display = 'block';
+        document.getElementById('quiz-area').style.display = 'none';
+        document.getElementById('result').innerText = '';
+    }
+
+    // Lấy tên người dùng từ Server
+    fetch('/api/user-status').then(res => res.json()).then(user => {
+        document.getElementById('user-name').innerText = user.loggedIn ? "Học sinh: " + user.username : "Chưa đăng nhập";
+    });
+
+    loadUnits();
+</script>
 </body>
 </html>
