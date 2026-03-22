@@ -2,33 +2,54 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Tiếng Anh 8 - Trang Chủ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiếng Anh 8 - Học Tập Thông Minh</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding-top: 60px; text-align: center; }
-        nav { background: #1a73e8; color: white; padding: 15px 30px; position: fixed; top: 0; width: 100%; display: flex; justify-content: space-between; box-sizing: border-box; }
-        nav a { color: white; text-decoration: none; margin-left: 20px; font-weight: bold; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 20px; }
-        .card { border: 1px solid #ddd; padding: 20px; border-radius: 10px; }
-        .btn { background: #1a73e8; color: white; padding: 10px; text-decoration: none; border-radius: 5px; display: inline-block; }
+        :root { --primary: #4f46e5; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        nav { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+        .nav-btns a { text-decoration: none; padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-weight: 600; transition: 0.2s; }
+        .login-btn { color: var(--primary); }
+        .register-btn { background: var(--primary); color: white; margin-left: 1rem; }
+        .hero { padding: 4rem 2rem; text-align: center; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .unit-card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: 0.3s; border: 1px solid #e2e8f0; }
+        .unit-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .btn-study { display: block; background: var(--primary); color: white; text-align: center; padding: 0.75rem; border-radius: 0.5rem; text-decoration: none; margin-top: 1.5rem; font-weight: bold; }
+        .locked { filter: grayscale(1); opacity: 0.7; pointer-events: none; }
     </style>
 </head>
 <body>
     <nav>
-        <span>TIẾNG ANH 8</span>
-        <div>
-            <a href="/login">Đăng Nhập</a>
-            <a href="/register">Đăng Ký</a>
+        <div class="logo">ENGLISH 8</div>
+        <div class="nav-btns" id="auth-btns">
+            <a href="/login" class="login-btn">Đăng nhập</a>
+            <a href="/register" class="register-btn">Bắt đầu miễn phí</a>
         </div>
     </nav>
 
-    <h1>Danh Sách Bài Học</h1>
-    <div id="unit-grid" class="grid"></div>
+    <div class="hero">
+        <h1>Chương Trình Tiếng Anh 8 Mới</h1>
+        <p>Hệ thống bài tập 12 Unit đầy đủ, bám sát chương trình bộ giáo dục.</p>
+    </div>
+
+    <div id="main-grid" class="grid"></div>
 
     <script>
+        // Danh sách 12 Unit
         const units = ["Leisure Activities", "Life in the Countryside", "Teenagers", "Ethnic Groups", "Customs", "Lifestyles", "Environment", "Shopping", "Disasters", "Communication", "Science", "Planets"];
-        const grid = document.getElementById('unit-grid');
-        units.forEach((u, i) => {
-            grid.innerHTML += `<div class="card"><h3>Unit ${i+1}</h3><p>${u}</p><a href="/study?u=${i+1}" class="btn">Vào Học</a></div>`;
+        const grid = document.getElementById('main-grid');
+        
+        // Vẽ 12 card bài học
+        units.forEach((name, i) => {
+            grid.innerHTML += `
+                <div class="unit-card">
+                    <span style="color: var(--primary); font-weight: bold;">UNIT ${i+1}</span>
+                    <h3 style="margin: 0.5rem 0;">${name}</h3>
+                    <a href="/study?u=${i+1}" class="btn-study">VÀO HỌC NGAY</a>
+                </div>
+            `;
         });
     </script>
 </body>
