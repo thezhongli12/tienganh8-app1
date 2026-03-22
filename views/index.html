@@ -4,43 +4,52 @@
     <meta charset="UTF-8">
     <title>Tiếng Anh 8 - Menu</title>
     <style>
-        body { font-family: 'Arial', sans-serif; background: #f4f7f6; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto; }
-        .card { background: white; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.3s; }
-        .card:hover { transform: translateY(-5px); }
-        .card.updating { background: #eee; border: 1px dashed #bbb; color: #888; }
-        button { background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+        body { font-family: sans-serif; background: #f0f2f5; text-align: center; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 1000px; margin: 20px auto; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .updating { opacity: 0.6; background: #fafafa; border: 1px dashed #ccc; }
+        button { background: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         button:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
-    <h1 style="text-align: center;">CHƯƠNG TRÌNH TIẾNG ANH 8</h1>
-    <div id="unit-grid" class="grid"></div>
+    <h1>CHƯƠNG TRÌNH TIẾNG ANH 8</h1>
+    <div id="unit-grid" class="grid">Đang tải dữ liệu...</div>
 
     <script>
-        const totalUnits = 12;
-        const grid = document.getElementById('unit-grid');
-
         async function loadMenu() {
+            const grid = document.getElementById('unit-grid');
             try {
-                const res = await fetch('../data/units.json'); // Đường dẫn tới file JSON
+                // Sửa đường dẫn để tìm đúng file JSON từ thư mục views
+                const res = await fetch('../data/units.json');
                 const data = await res.json();
-                
-                for (let i = 1; i <= totalUnits; i++) {
+                grid.innerHTML = '';
+
+                for (let i = 1; i <= 12; i++) {
                     const unitKey = `unit${i}`;
                     const hasData = data[unitKey] && data[unitKey].questions && data[unitKey].questions.length > 0;
                     
                     const card = document.createElement('div');
                     card.className = `card ${!hasData ? 'updating' : ''}`;
                     
-                    card.innerHTML = `
-                        <h3>Unit ${i}</h3>
-                        ${hasData ? `<button onclick="location.href='./study.html?u=${i}'">Vào Học</button>` 
-                                 : `<p><i>Đang cập nhật...</i></p><button disabled>Chưa mở</button>`}
-                    `;
+                    if (hasData) {
+                        card.innerHTML = `
+                            <h3>Unit ${i}</h3>
+                            <p>${data[unitKey].title || 'Luyện tập'}</p>
+                            <button onclick="location.href='/study?u=${i}'">VÀO HỌC</button>
+                        `;
+                    } else {
+                        card.innerHTML = `
+                            <h3>Unit ${i}</h3>
+                            <p style="color: #888;"><i>Đang cập nhật...</i></p>
+                            <button disabled>Chưa mở</button>
+                        `;
+                    }
                     grid.appendChild(card);
                 }
-            } catch (e) { console.error("Lỗi load JSON:", e); }
+            } catch (e) {
+                grid.innerHTML = "Lỗi tải dữ liệu. Hãy kiểm tra file JSON!";
+            }
         }
         loadMenu();
     </script>
