@@ -1,28 +1,56 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head><meta charset="UTF-8"><title>Đăng Nhập</title></head>
-<body style="text-align:center; padding-top:50px; font-family:sans-serif;">
-    <h2>ĐĂNG NHẬP</h2>
-    <form id="loginForm">
-        <input type="text" id="user" placeholder="Tên đăng nhập" required><br><br>
-        <input type="password" id="pass" placeholder="Mật khẩu" required><br><br>
-        <button type="submit">Đăng Nhập</button>
-    </form>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiếng Anh 8 - Học Tập Thông Minh</title>
+    <style>
+        :root { --primary: #4f46e5; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        nav { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+        .nav-btns a { text-decoration: none; padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-weight: 600; transition: 0.2s; }
+        .login-btn { color: var(--primary); }
+        .register-btn { background: var(--primary); color: white; margin-left: 1rem; }
+        .hero { padding: 4rem 2rem; text-align: center; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .unit-card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: 0.3s; border: 1px solid #e2e8f0; }
+        .unit-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .btn-study { display: block; background: var(--primary); color: white; text-align: center; padding: 0.75rem; border-radius: 0.5rem; text-decoration: none; margin-top: 1.5rem; font-weight: bold; }
+        .locked { filter: grayscale(1); opacity: 0.7; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">ENGLISH 8</div>
+        <div class="nav-btns" id="auth-btns">
+            <a href="/login" class="login-btn">Đăng nhập</a>
+            <a href="/register" class="register-btn">Bắt đầu miễn phí</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>Chương Trình Tiếng Anh 8 Mới</h1>
+        <p>Hệ thống bài tập 12 Unit đầy đủ, bám sát chương trình bộ giáo dục.</p>
+    </div>
+
+    <div id="main-grid" class="grid"></div>
+
     <script>
-        document.getElementById('loginForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const res = await fetch('/api/login', { // Khớp với app.post('/api/login') của bạn
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: document.getElementById('user').value,
-                    password: document.getElementById('pass').value
-                })
-            });
-            const data = await res.json();
-            if (data.success) window.location.href = "/";
-            else alert(data.message);
-        };
+        // Danh sách 12 Unit
+        const units = ["Leisure Activities", "Life in the Countryside", "Teenagers", "Ethnic Groups", "Customs", "Lifestyles", "Environment", "Shopping", "Disasters", "Communication", "Science", "Planets"];
+        const grid = document.getElementById('main-grid');
+        
+        // Vẽ 12 card bài học
+        units.forEach((name, i) => {
+            grid.innerHTML += `
+                <div class="unit-card">
+                    <span style="color: var(--primary); font-weight: bold;">UNIT ${i+1}</span>
+                    <h3 style="margin: 0.5rem 0;">${name}</h3>
+                    <a href="/study?u=${i+1}" class="btn-study">VÀO HỌC NGAY</a>
+                </div>
+            `;
+        });
     </script>
 </body>
 </html>
