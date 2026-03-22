@@ -9,21 +9,21 @@ const app = express();
 
 // 1. KẾT NỐI DATABASE
 const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/tienganh8?retryWrites=true&w=majority";
-mongoose.connect(mongoURI).then(() => console.log('✅ Kết nối DB thành công'));
+mongoose.connect(mongoURI).then(() => console.log('✅ Kết nối MongoDB thành công'));
 
-// 2. MODEL (Đã thêm timestamps để hiện thời gian)
+// 2. MODEL NGƯỜI DÙNG (Thêm timestamps để hiện thời gian đăng ký)
 const User = mongoose.model('User', new mongoose.Schema({
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, default: 'user' }
-}, { timestamps: true }));
+}, { timestamps: true })); 
 
 // 3. MIDDLEWARE
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 4. CẤU HÌNH SESSION
+// 4. SESSION (Lưu trạng thái đăng nhập)
 app.use(session({
     secret: 'secret_key_080212',
     resave: false,
@@ -37,14 +37,24 @@ app.get('/api/user-status', (req, res) => {
     res.json(req.session.userId ? { loggedIn: true, username: req.session.userId, role: req.session.role } : { loggedIn: false });
 });
 
-// 6. ĐIỀU HƯỚNG TRANG
+app.get('/api/questions', (req, res) => {
+    const filePath = path.join(__dirname, 'data', 'units.json');
+    if (fs.existsSync(filePath)) res.json(JSON.parse(fs.readFileSync(filePath, 'utf8')));
+    else res.status(404).json({ error: "File not found" });
+});
+
+// 6. ĐIỀU HƯỚNG TRANG (ROUTES)
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views', 'index.html')));
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html')));
+app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'views', 'register.html')));
+app.get('/study', (req, res) => req.session.userId ? res.sendFile(path.join(__dirname, 'views', 'study.html')) : res.redirect('/login'));
+
 app.get('/admin', (req, res) => {
     if (req.session.role !== 'admin') return res.redirect('/');
     res.sendFile(path.join(__dirname, 'views', 'admin.html'));
 });
 
-// 7. LOGIN (Đã sửa để gán đúng quyền Admin)
+// 7. XỬ LÝ ĐĂNG NHẬP (Dùng mật khẩu 080212 để nhận diện Admin)
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     if (password === "080212") {
@@ -58,21 +68,16 @@ app.post('/api/login', async (req, res) => {
         req.session.role = 'user';
         return res.json({ success: true, redirect: "/" });
     }
-    res.json({ success: false, message: "Sai tài khoản!" });
+    res.json({ success: false, message: "Sai tài khoản hoặc mật khẩu!" });
 });
 
-// 8. API QUẢN TRỊ (Phần quan trọng nhất bị thiếu)
+// 8. API QUẢN TRỊ (Lấy danh sách có Mật khẩu + Thời gian)
 app.get('/api/admin/users', async (req, res) => {
+    if (req.session.role !== 'admin') return res.json({ success: false, message: "Không có quyền!" });
     try {
-        if (req.session.role !== 'admin') {
-            return res.json({ success: false, message: "Bạn không có quyền!" });
-        }
-        // Lấy pass và thời gian tạo
         const users = await User.find({}, 'username password role createdAt').sort({ createdAt: -1 });
         res.json({ success: true, users });
-    } catch (err) {
-        res.json({ success: false });
-    }
+    } catch (err) { res.json({ success: false }); }
 });
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
