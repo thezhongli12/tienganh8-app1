@@ -2,83 +2,137 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard - Quản lý English 8</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Quản lý học sinh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; }
-        .sidebar { width: 250px; background: #2c3e50; color: white; padding: 20px; }
-        .main { flex: 1; padding: 40px; overflow-y: auto; }
-        h2 { color: #2c3e50; border-bottom: 2px solid #1a73e8; padding-bottom: 10px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #1a73e8; color: white; }
-        .status-badge { background: #e6f4ea; color: #1e8e3e; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-        .btn-back { display: inline-block; margin-bottom: 20px; color: #1a73e8; text-decoration: none; font-weight: bold; }
+        :root { --sidebar-bg: #1e293b; --primary: #3b82f6; --text-light: #94a3b8; }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; margin: 0; display: flex; height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: white; padding: 20px; display: flex; flex-direction: column; }
+        .sidebar h2 { font-size: 20px; margin-bottom: 30px; border-bottom: 1px solid #334155; padding-bottom: 15px; }
+        .nav-link { color: var(--text-light); text-decoration: none; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: block; transition: 0.3s; }
+        .nav-link:hover { background: #334155; color: white; }
+        .nav-link.active { background: var(--primary); color: white; }
+        .logout-link { margin-top: auto; color: #ef4444; font-weight: bold; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .header-actions { margin-bottom: 20px; }
+        .back-link { text-decoration: none; color: var(--primary); font-size: 14px; }
+        
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { font-size: 24px; color: #1e293b; margin-bottom: 5px; }
+        .stats { color: #64748b; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #f1f5f9; }
+
+        /* Table Style */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #2563eb; color: white; text-align: left; padding: 12px 15px; font-size: 14px; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; color: #475569; font-size: 14px; }
+        tr:hover { background: #f8fafc; }
+        
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-admin { background: #dcfce7; color: #15803d; }
+        .badge-user { background: #e0e7ff; color: #4338ca; }
+        .status-active { color: #10b981; }
+
+        #error-msg { color: #ef4444; background: #fee2e2; padding: 15px; border-radius: 8px; margin-top: 20px; display: none; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <h3>ADMIN PANEL</h3>
-    <hr>
-    <p>Chào sếp!</p>
-    <ul style="list-style:none; padding:0;">
-        <li><a href="/" style="color:white; text-decoration:none">🏠 Về Trang Chủ</a></li>
-        <li style="margin-top:20px"><a href="/logout" style="color:#ff7675; text-decoration:none">🚪 Đăng xuất</a></li>
-    </ul>
-</div>
-
-<div class="main">
-    <a href="/" class="btn-back">← Quay lại trang chủ</a>
-    <div class="card">
-        <h2>Danh sách học sinh đã đăng ký</h2>
-        <p>Tổng số thành viên: <span id="user-count">0</span></p>
-        
-        <table id="userTable">
-            <thead>
-                <tr>
-                    <th>Tên tài khoản (Username)</th>
-                    <th>Vai trò</th>
-                    <th>Trạng thái</th>
-                </tr>
-            </thead>
-            <tbody id="userList">
-                <tr><td colspan="3">Đang tải dữ liệu...</td></tr>
-            </tbody>
-        </table>
+    <div class="sidebar">
+        <h2>ADMIN PANEL</h2>
+        <p style="font-size: 14px; color: var(--text-light);">Chào sếp!</p>
+        <nav>
+            <a href="/" class="nav-link">🏠 Về Trang Chủ</a>
+            <a href="/admin" class="nav-link active">👥 Quản lý học sinh</a>
+            <a href="/logout" class="nav-link logout-link">🚪 Đăng xuất</a>
+        </nav>
     </div>
-</div>
 
-<script>
-    async function fetchUsers() {
-        try {
-            // API này lấy danh sách user từ MongoDB mà mình đã viết trong app.js
-            const res = await fetch('/api/admin/users');
-            const users = await res.json();
-            
-            const list = document.getElementById('userList');
-            const count = document.getElementById('user-count');
-            
-            count.innerText = users.length;
-            
-            if(users.length === 0) {
-                list.innerHTML = '<tr><td colspan="3">Chưa có học sinh nào đăng ký.</td></tr>';
-                return;
+    <div class="main-content">
+        <div class="header-actions">
+            <a href="/" class="back-link">← Quay lại trang chủ</a>
+        </div>
+
+        <div class="card">
+            <h1>Danh sách học sinh đã đăng ký</h1>
+            <div class="stats">Tổng số thành viên: <span id="total-count" style="font-weight: bold; color: #1e293b;">0</span></div>
+
+            <div id="error-msg">Lỗi: Bạn không có quyền xem trang này!</div>
+
+            <table id="user-table">
+                <thead>
+                    <tr>
+                        <th style="border-radius: 8px 0 0 0;">Tên tài khoản (Username)</th>
+                        <th>Vai trò</th>
+                        <th style="border-radius: 0 8px 0 0;">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody id="user-list-body">
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 40px; color: #94a3b8;">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+    <script>
+        async function fetchUsers() {
+            const tableBody = document.getElementById('user-list-body');
+            const totalText = document.getElementById('total-count');
+            const errorDiv = document.getElementById('error-msg');
+
+            try {
+                // Gọi API lấy danh sách user từ Server
+                const res = await fetch('/api/admin/users');
+                const data = await res.json();
+
+                if (data.success) {
+                    // 1. Cập nhật tổng số
+                    totalText.innerText = data.users.length;
+
+                    // 2. Xóa nội dung cũ trong bảng
+                    tableBody.innerHTML = '';
+
+                    // 3. Duyệt danh sách và render
+                    data.users.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td style="font-weight: 600;">${user.username}</td>
+                            <td>
+                                <span class="badge ${user.role === 'admin' ? 'badge-admin' : 'badge-user'}">
+                                    ${user.role === 'admin' ? '⭐ Quản trị' : 'Học sinh'}
+                                </span>
+                            </td>
+                            <td><span class="status-active">● Hoạt động</span></td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    // Ẩn thông báo lỗi nếu thành công
+                    errorDiv.style.display = 'none';
+                } else {
+                    // Nếu Server báo không có quyền
+                    tableBody.innerHTML = '';
+                    errorDiv.innerText = "❌ " + data.message;
+                    errorDiv.style.display = 'block';
+                    totalText.innerText = "undefined";
+                }
+            } catch (err) {
+                console.error("Lỗi:", err);
+                errorDiv.innerText = "❌ Lỗi kết nối Server!";
+                errorDiv.style.display = 'block';
             }
-
-            list.innerHTML = users.map(user => `
-                <tr>
-                    <td><b>${user.username}</b></td>
-                    <td>Thành viên</td>
-                    <td><span class="status-badge">Đang hoạt động</span></td>
-                </tr>
-            `).join('');
-        } catch (e) {
-            document.getElementById('userList').innerHTML = '<tr><td colspan="3" style="color:red">Lỗi: Bạn không có quyền xem trang này!</td></tr>';
         }
-    }
-    fetchUsers();
-</script>
 
+        // Tự động chạy khi mở trang
+        fetchUsers();
+    </script>
 </body>
 </html>
