@@ -1,95 +1,81 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const path = require('path');
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
-const fs = require('fs');
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel - English 8</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; margin: 0; display: flex; }
+        .sidebar { width: 250px; background: #1e293b; color: white; height: 100vh; padding: 20px; position: fixed; }
+        .main { margin-left: 270px; padding: 30px; flex: 1; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #3b82f6; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+        .pass-text { color: #e11d48; font-family: monospace; font-weight: bold; background: #fff1f2; padding: 2px 6px; border-radius: 4px; }
+        .time-text { color: #64748b; font-size: 12px; }
+    </style>
+</head>
+<body>
 
-const app = express();
+<div class="sidebar">
+    <h2>ADMIN PANEL</h2>
+    <p>Chào sếp! (Pass: 080212)</p>
+    <hr>
+    <a href="/" style="color:white; text-decoration:none;">🏠 Về Trang Chủ</a><br><br>
+    <a href="/logout" style="color:#fb7185; text-decoration:none;">🚪 Đăng xuất</a>
+</div>
 
-// 1. CẤU HÌNH DATABASE
-const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/tienganh8?retryWrites=true&w=majority";
-mongoose.connect(mongoURI).then(() => console.log('✅ MongoDB Connected'));
+<div class="main">
+    <div class="card">
+        <h1>Danh sách học sinh</h1>
+        <p>Tổng số thành viên: <span id="total-count" style="font-weight:bold;">0</span></p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Ngày đăng ký</th>
+                    <th>Tên tài khoản</th>
+                    <th>Mật khẩu</th>
+                    <th>Vai trò</th>
+                </tr>
+            </thead>
+            <tbody id="user-list">
+                <tr><td colspan="4" style="text-align:center;">Đang tải dữ liệu...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
-// 2. MODEL NGƯỜI DÙNG (Thêm timestamps để lưu thời gian đăng ký)
-const User = mongoose.model('User', new mongoose.Schema({
-    username: { type: String, unique: true, required: true },
-    password: { type: String, required: true },
-    role: { type: String, default: 'user' }
-}, { timestamps: true })); 
 
-// 3. MIDDLEWARE
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
 
-// 4. SESSION
-app.use(session({
-    secret: 'secret_key_080212',
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: mongoURI }),
-    cookie: { maxAge: 1000 * 60 * 60 * 24 }
-}));
+<script>
+    async function loadData() {
+        try {
+            const res = await fetch('/api/admin/users');
+            const data = await res.json();
 
-// 5. API HỆ THỐNG
-app.get('/api/user-status', (req, res) => {
-    res.json(req.session.userId ? { loggedIn: true, username: req.session.userId, role: req.session.role } : { loggedIn: false });
-});
-
-app.get('/api/questions', (req, res) => {
-    const filePath = path.join(__dirname, 'data', 'units.json');
-    if (fs.existsSync(filePath)) res.json(JSON.parse(fs.readFileSync(filePath, 'utf8')));
-    else res.status(404).json({ error: "File not found" });
-});
-
-// 6. ROUTES ĐIỀU HƯỚNG
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views', 'index.html')));
-app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html')));
-app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'views', 'register.html')));
-app.get('/study', (req, res) => req.session.userId ? res.sendFile(path.join(__dirname, 'views', 'study.html')) : res.redirect('/login'));
-
-app.get('/admin', (req, res) => {
-    if (req.session.role !== 'admin') return res.redirect('/');
-    res.sendFile(path.join(__dirname, 'views', 'admin.html'));
-});
-
-// 7. XỬ LÝ ĐĂNG KÝ & ĐĂNG NHẬP
-app.post('/api/register', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        if (await User.findOne({ username })) return res.json({ success: false, message: "Tên đăng nhập đã tồn tại!" });
-        await new User({ username, password }).save();
-        res.json({ success: true, message: "Đăng ký thành công!" });
-    } catch (err) { res.status(500).json({ success: false }); }
-});
-
-app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
-    // Kiểm tra Admin (Mật khẩu 080212 của bạn)
-    if (password === "080212") {
-        req.session.userId = username || "Admin";
-        req.session.role = 'admin';
-        return res.json({ success: true, redirect: "/" });
+            if (data.success) {
+                document.getElementById('total-count').innerText = data.users.length;
+                const tbody = document.getElementById('user-list');
+                tbody.innerHTML = data.users.map(u => {
+                    const time = u.createdAt ? new Date(u.createdAt).toLocaleString('vi-VN') : 'Trước đó';
+                    return `
+                        <tr>
+                            <td class="time-text">${time}</td>
+                            <td><b>${u.username}</b></td>
+                            <td><span class="pass-text">${u.password}</span></td>
+                            <td>${u.role === 'admin' ? '⭐ Admin' : 'Học sinh'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                alert("Lỗi: " + data.message);
+                window.location.href = "/";
+            }
+        } catch (err) { console.error("Lỗi fetch:", err); }
     }
-    const user = await User.findOne({ username, password });
-    if (user) {
-        req.session.userId = user.username;
-        req.session.role = 'user';
-        return res.json({ success: true, redirect: "/" });
-    }
-    res.json({ success: false, message: "Sai tài khoản hoặc mật khẩu!" });
-});
+    loadData();
+</script>
 
-// 8. API QUẢN TRỊ (Hiện mật khẩu và thời gian)
-app.get('/api/admin/users', async (req, res) => {
-    if (req.session.role !== 'admin') return res.json({ success: false, message: "Không có quyền!" });
-    try {
-        const users = await User.find({}, 'username password role createdAt').sort({ createdAt: -1 });
-        res.json({ success: true, users });
-    } catch (err) { res.json({ success: false }); }
-});
-
-app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
-
-module.exports = app;
+</body>
+</html>
