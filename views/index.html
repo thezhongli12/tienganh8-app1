@@ -7,89 +7,61 @@
     <style>
         :root { --primary: #1a73e8; --bg: #f8f9fa; --text: #333; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        h1 { text-align: center; color: var(--primary); margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px; }
+        h1 { text-align: center; color: var(--primary); margin-bottom: 30px; text-transform: uppercase; }
         
         .unit-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-            gap: 20px; 
-            max-width: 1200px; 
-            margin: 0 auto; 
+            gap: 20px; max-width: 1200px; margin: 0 auto; 
         }
 
         .unit-card { 
-            background: white; 
-            border-radius: 15px; 
-            padding: 25px; 
-            text-align: center; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-            transition: all 0.3s ease;
-            border: 1px solid #eee;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            background: white; border-radius: 15px; padding: 25px; text-align: center; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.3s;
+            border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between;
         }
 
         .unit-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-        
-        /* Trạng thái Đang cập nhật cho Unit 10-12 */
-        .unit-card.updating { 
-            background: #fdfdfd; 
-            border: 1px dashed #ccc; 
-            opacity: 0.7; 
-        }
+        .unit-card.updating { background: #fdfdfd; border: 1px dashed #ccc; opacity: 0.7; }
 
-        h3 { margin-top: 0; color: #444; font-size: 1.4rem; }
-        p { color: #666; font-size: 0.95rem; margin-bottom: 20px; }
-
+        h3 { margin-top: 0; color: #444; }
         .btn-start { 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            padding: 12px 25px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            transition: 0.2s;
-            text-decoration: none;
-            display: inline-block;
+            background: var(--primary); color: white; border: none; padding: 12px 25px; 
+            border-radius: 8px; cursor: pointer; font-weight: bold; text-decoration: none; 
         }
-
-        .btn-start:hover { background: #1557b0; }
         .btn-disabled { background: #ccc; cursor: not-allowed; }
-
-        #error-msg { color: #d93025; background: #fce8e6; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; }
+        #error-msg { color: #d93025; background: #fce8e6; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
     <h1>Chương Trình Tiếng Anh 8</h1>
-    
     <div id="error-msg"></div>
-
-    <div id="unit-grid" class="unit-grid">
-        </div>
+    <div id="unit-grid" class="unit-grid">Đang tải bài học...</div>
 
     <script>
         async function initApp() {
             const grid = document.getElementById('unit-grid');
             const errorBox = document.getElementById('error-msg');
-            const totalUnits = 12; // Cố định hiển thị 12 Unit
 
             try {
-                // SỬA LỖI: Dùng đường dẫn tuyệt đối để Vercel tìm thấy file JSON
-                const response = await fetch('/data/units.json');
+                // CƠ CHẾ FETCH KÉP: Thử cả 2 đường dẫn để chắc chắn không lỗi JSON
+                let response = await fetch('/data/units.json');
+                if (!response.ok) {
+                    response = await fetch('../data/units.json');
+                }
                 
-                if (!response.ok) throw new Error("Không thể tải dữ liệu bài học (404/500)");
+                if (!response.ok) throw new Error("Không thể tải units.json");
                 
                 const data = await response.json();
-                grid.innerHTML = ''; // Xóa sạch loading
+                grid.innerHTML = ''; 
 
-                for (let i = 1; i <= totalUnits; i++) {
+                // Vòng lặp cố định 12 lần để hiện Unit 10-12
+                for (let i = 1; i <= 12; i++) {
                     const unitKey = `unit${i}`;
                     const unitData = data[unitKey];
                     
-                    // Kiểm tra Unit có dữ liệu và có câu hỏi hay không
+                    // Kiểm tra Unit có bài hay không
                     const isAvailable = unitData && unitData.questions && unitData.questions.length > 0;
                     
                     const card = document.createElement('div');
@@ -99,32 +71,30 @@
                         card.innerHTML = `
                             <div>
                                 <h3>Unit ${i}</h3>
-                                <p>${unitData.title || 'Luyện tập củng cố kiến thức'}</p>
+                                <p>${unitData.title || 'Luyện tập củng cố'}</p>
                             </div>
-                            <a href="/study?u=${i}" class="btn-start">VÀO HỌC NGAY</a>
+                            <a href="/study?u=${i}" class="btn-start">VÀO HỌC</a>
                         `;
                     } else {
-                        // Hiển thị cho Unit 10, 11, 12 hoặc bài chưa soạn xong
                         card.innerHTML = `
                             <div>
                                 <h3>Unit ${i}</h3>
-                                <p style="font-style: italic; color: #999;">Nội dung đang được biên soạn...</p>
+                                <p style="font-style: italic; color: #999;">Đang cập nhật nội dung...</p>
                             </div>
-                            <button class="btn-start btn-disabled" disabled>ĐANG CẬP NHẬT</button>
+                            <button class="btn-start btn-disabled" disabled>CHƯA MỞ</button>
                         `;
                     }
                     grid.appendChild(card);
                 }
 
             } catch (error) {
-                console.error("Lỗi:", error);
+                console.error(error);
                 errorBox.style.display = 'block';
-                errorBox.innerHTML = `<b>Lỗi kết nối:</b> Không thể tải danh sách bài học. Vui lòng kiểm tra lại file <code>/data/units.json</code> hoặc cấu hình Vercel!`;
+                errorBox.innerHTML = `<b>Lỗi kết nối:</b> Không tìm thấy dữ liệu. Kiểm tra file <code>/data/units.json</code>`;
                 grid.innerHTML = ''; 
             }
         }
 
-        // Chạy hàm khi trang web tải xong
         window.onload = initApp;
     </script>
 </body>
