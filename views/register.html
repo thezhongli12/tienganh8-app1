@@ -1,31 +1,37 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head><meta charset="UTF-8"><title>Đăng Ký</title></head>
-<body style="text-align:center; padding-top:50px; font-family:sans-serif;">
-    <h2>ĐĂNG KÝ TÀI KHOẢN</h2>
-    <form id="regForm">
-        <input type="text" id="user" placeholder="Tên đăng nhập (≥6 ký tự)" required><br><br>
-        <input type="password" id="pass" placeholder="Mật khẩu (≥8 ký tự)" required><br><br>
-        <button type="submit">Đăng Ký</button>
-    </form>
+<head><meta charset="UTF-8"><title>Đăng Ký - English 8</title>
+<style>
+    body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f1f5f9; margin: 0; }
+    .form-box { background: white; padding: 2.5rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+    input { width: 100%; padding: 0.75rem; margin: 0.5rem 0 1.5rem 0; border: 1px solid #ddd; border-radius: 0.5rem; box-sizing: border-box; }
+    button { width: 100%; padding: 0.75rem; background: #4f46e5; color: white; border: none; border-radius: 0.5rem; font-weight: bold; cursor: pointer; }
+</style>
+</head>
+<body>
+    <div class="form-box">
+        <h2>Tạo tài khoản</h2>
+        <p style="font-size: 0.8rem; color: #64748b;">Khám phá kho tàng bài tập Tiếng Anh 8</p>
+        <form id="regForm">
+            <label>Tên đăng nhập (ít nhất 6 ký tự)</label>
+            <input type="text" id="u" required minlength="6">
+            <label>Mật khẩu (ít nhất 8 ký tự)</label>
+            <input type="password" id="p" required minlength="8">
+            <button type="submit">Đăng ký thành viên</button>
+        </form>
+        <p style="text-align:center; margin-top:1rem;">Đã có tài khoản? <a href="/login">Đăng nhập</a></p>
+    </div>
     <script>
         document.getElementById('regForm').onsubmit = async (e) => {
             e.preventDefault();
-            const res = await fetch('/api/register', { // Khớp với app.post('/api/register') của bạn
+            const res = await fetch('/api/register', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: document.getElementById('user').value,
-                    password: document.getElementById('pass').value
-                })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: document.getElementById('u').value, password: document.getElementById('p').value})
             });
             const data = await res.json();
-            if (data.success) {
-                alert("Đăng ký thành công!");
-                window.location.href = "/login";
-            } else {
-                alert("Lỗi: " + data.message);
-            }
+            if(data.success) { alert("Đăng ký thành công!"); window.location.href="/login"; }
+            else { alert(data.message); } // Hiện thông báo lỗi từ app.js
         };
     </script>
 </body>
