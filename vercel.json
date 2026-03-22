@@ -3,9 +3,9 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/study", "destination": "/views/study.html" },
     { "source": "/login", "destination": "/views/login.html" },
     { "source": "/register", "destination": "/views/register.html" },
-    { "source": "/study", "destination": "/views/study.html" },
     { "source": "/", "destination": "/views/index.html" }
   ]
 }
