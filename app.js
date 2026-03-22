@@ -1,79 +1,31 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const path = require('path');
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
-const fs = require('fs');
-
-const app = express();
-// Mật khẩu admin: 080212 đã cập nhật theo yêu cầu
-const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/tienganh8?retryWrites=true&w=majority";
-
-mongoose.connect(mongoURI)
-    .then(() => console.log('✅ MongoDB Connected'))
-    .catch(err => console.error('❌ Lỗi kết nối DB:', err.message));
-
-const User = mongoose.model('User', new mongoose.Schema({
-    username: { type: String, unique: true, minlength: 6 },
-    password: { type: String, minlength: 8 }
-}));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(session({
-    secret: '080212',
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: mongoURI }),
-    cookie: { maxAge: 1000 * 60 * 60 * 24 } 
-}));
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-// API TRẠNG THÁI USER
-app.get('/api/user-status', (req, res) => {
-    res.json(req.session.userId ? { loggedIn: true, username: req.session.userId, role: req.session.role } : { loggedIn: false });
-});
-
-// API LẤY CÂU HỎI TỪ JSON
-app.get('/api/questions', (req, res) => {
-    try {
-        const data = fs.readFileSync(path.join(__dirname, 'unit.json'), 'utf8');
-        res.json(JSON.parse(data));
-    } catch (err) {
-        res.status(500).json({ error: "Lỗi đọc file unit.json" });
+<script>
+    function renderUnitPreview() {
+        const grid = document.getElementById('unit-preview');
+        if (!grid) return;
+        grid.innerHTML = ""; 
+        for (let i = 1; i <= 12; i++) {
+            // Chuyển hướng sang study kèm tham số ?unit=i
+            grid.innerHTML += `
+                <div class="unit-item" onclick="window.location.href='/study?unit=${i}'" style="cursor:pointer; border:1px solid #ddd; padding:20px; border-radius:10px; text-align:center;">
+                    <h3>Unit ${i}</h3>
+                    <p>Bấm để học bài</p>
+                </div>`;
+        }
     }
-});
 
-// ĐIỀU HƯỚNG TRANG
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views', 'index.html')));
-app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html')));
-app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'views', 'register.html')));
-app.get('/study', (req, res) => {
-    if (!req.session.userId) return res.redirect('/login');
-    res.sendFile(path.join(__dirname, 'views', 'study.html'));
-});
+    async function checkUserStatus() {
+        const res = await fetch('/api/user-status');
+        const data = await res.json();
+        const authZone = document.getElementById('auth-zone');
+        const unitArea = document.getElementById('units-area'); // Cần có ID này ở thẻ div chứa 12 unit
 
-// LOGIC ĐĂNG NHẬP (Phân loại Admin/User)
-app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
-    if (password === "080212") {
-        req.session.userId = username || "Admin";
-        req.session.role = 'admin';
-        return res.json({ success: true, redirect: "/" });
+        if (data.loggedIn) {
+            authZone.innerHTML = `<span>Chào, <b>${data.username}</b></span> | <a href="/logout">Thoát</a>`;
+            if (unitArea) {
+                unitArea.style.display = 'block'; 
+                renderUnitPreview();
+            }
+        }
     }
-    const user = await User.findOne({ username });
-    if (user && user.password === password) {
-        req.session.userId = username;
-        req.session.role = 'user';
-        return res.json({ success: true, redirect: "/" });
-    }
-    res.json({ success: false, message: "Sai tài khoản hoặc mật khẩu!" });
-});
-
-app.get('/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/');
-});
-
-module.exports = app;
+    checkUserStatus();
+</script>
