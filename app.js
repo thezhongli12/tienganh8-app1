@@ -5,7 +5,7 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
 const app = express();
-const mongoURI = "mongodb+srv://thezhongli12:080212@cluster0.fwz1mo6.mongodb.net/tienganh8";
+const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/?appName=Cluster0";
 
 // 1. Kết nối Database
 mongoose.connect(mongoURI).then(() => console.log('✅ Hệ thống đã sẵn sàng'));
