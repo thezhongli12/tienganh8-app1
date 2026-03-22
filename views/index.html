@@ -8,97 +8,70 @@
         :root { --blue: #1a73e8; --bg: #f1f3f4; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; text-align: center; }
         h1 { color: var(--blue); text-transform: uppercase; margin-bottom: 30px; }
-        
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-            gap: 20px; max-width: 1100px; margin: 0 auto; 
-        }
-
-        .card { 
-            background: white; border-radius: 12px; padding: 25px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s;
-            display: flex; flex-direction: column; justify-content: space-between;
-            border: 1px solid #e0e0e0;
-        }
-
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
+        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #e0e0e0; }
         .card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
         .card.off { opacity: 0.6; background: #fafafa; border-style: dashed; }
-
         h3 { margin: 0 0 10px 0; color: #333; }
         p { color: #666; font-size: 0.9em; margin-bottom: 20px; }
-
-        .btn { 
-            background: var(--blue); color: white; border: none; padding: 12px; 
-            border-radius: 6px; cursor: pointer; font-weight: bold; text-decoration: none; 
-        }
+        .btn { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; text-decoration: none; display: block; }
         .btn:disabled { background: #bdc1c6; cursor: not-allowed; }
-        
-        #msg { color: #d93025; background: #fce8e6; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
     <h1>Chương Trình Tiếng Anh 8</h1>
-    
-    <div id="msg"></div>
-    <div id="unit-grid" class="grid">Đang tải bài học...</div>
+    <div id="unit-grid" class="grid"></div>
 
     <script>
-        async function loadApp() {
+        // DÁN TRỰC TIẾP DỮ LIỆU VÀO ĐÂY ĐỂ TRÁNH LỖI KẾT NỐI
+        const unitData = {
+            "unit1": { "title": "Leisure Activities", "questions": [1] },
+            "unit2": { "title": "Life in the Countryside", "questions": [1] },
+            "unit3": { "title": "Teenagers", "questions": [1] },
+            "unit4": { "title": "Ethnic Groups of Vietnam", "questions": [1] },
+            "unit5": { "title": "Our Customs and Traditions", "questions": [1] },
+            "unit6": { "title": "Lifestyles", "questions": [1] },
+            "unit7": { "title": "Environmental Protection", "questions": [1] },
+            "unit8": { "title": "Shopping", "questions": [1] },
+            "unit9": { "title": "Natural Disasters", "questions": [1] }
+            // Unit 10, 11, 12 không có dữ liệu sẽ tự hiện "Đang cập nhật"
+        };
+
+        function renderMenu() {
             const grid = document.getElementById('unit-grid');
-            const msg = document.getElementById('msg');
+            grid.innerHTML = '';
 
-            try {
-                // Thử cả 2 đường dẫn để chắc chắn tìm thấy file JSON
-                let response = await fetch('/data/units.json');
-                if (!response.ok) response = await fetch('../data/units.json');
+            for (let i = 1; i <= 12; i++) {
+                const key = `unit${i}`;
+                const info = unitData[key];
+                const isReady = info && info.questions && info.questions.length > 0;
                 
-                if (!response.ok) throw new Error("404");
+                const card = document.createElement('div');
+                card.className = isReady ? 'card' : 'card off';
                 
-                const data = await response.json();
-                grid.innerHTML = ''; 
-
-                // Luôn lặp đủ 12 Unit
-                for (let i = 1; i <= 12; i++) {
-                    const unitKey = `unit${i}`;
-                    const uData = data[unitKey];
-                    
-                    // Kiểm tra xem Unit i có câu hỏi không
-                    const isOk = uData && uData.questions && uData.questions.length > 0;
-                    
-                    const card = document.createElement('div');
-                    card.className = isOk ? 'card' : 'card off';
-
-                    if (isOk) {
-                        card.innerHTML = `
-                            <div>
-                                <h3>Unit ${i}</h3>
-                                <p>${uData.title || 'Luyện tập tổng hợp'}</p>
-                            </div>
-                            <a href="/study?u=${i}" class="btn">VÀO HỌC</a>
-                        `;
-                    } else {
-                        // Hiển thị cho Unit 10, 11, 12 đang cập nhật
-                        card.innerHTML = `
-                            <div>
-                                <h3>Unit ${i}</h3>
-                                <p><i>Nội dung đang được cập nhật...</i></p>
-                            </div>
-                            <button class="btn" disabled>CHƯA MỞ</button>
-                        `;
-                    }
-                    grid.appendChild(card);
+                if (isReady) {
+                    card.innerHTML = `
+                        <div>
+                            <h3>Unit ${i}</h3>
+                            <p>${info.title}</p>
+                        </div>
+                        <a href="/study?u=${i}" class="btn">VÀO HỌC</a>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div>
+                            <h3>Unit ${i}</h3>
+                            <p><i>Đang cập nhật nội dung...</i></p>
+                        </div>
+                        <button class="btn" disabled>CHƯA MỞ</button>
+                    `;
                 }
-
-            } catch (err) {
-                msg.style.display = 'block';
-                msg.innerHTML = `<b>Lỗi kết nối:</b> Không tìm thấy dữ liệu tại <code>/data/units.json</code>.`;
-                grid.innerHTML = ''; 
+                grid.appendChild(card);
             }
         }
 
-        window.onload = loadApp;
+        renderMenu();
     </script>
 </body>
 </html>
