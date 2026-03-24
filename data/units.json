@@ -181,7 +181,7 @@
         { "question": "I love window ______.", "options": ["shopping", "running", "buying", "selling"], "correct": 0 },
         { "question": "This dress is a ______.", "options": ["bargain", "shop", "mall", "bag"], "correct": 0 },
         { "question": "Online ______ is easy.", "options": ["shopping", "cooking", "running", "fishing"], "correct": 0 },
-        { "question": "The ______ is too long.", "options": ["queue", "road", "street", "bus"], "correct": 0 },
+        { "question": "The ______ is too long.", "options": ["queue", "car", "street", "bus"], "correct": 0 },
         { "question": "Dịch: 'Bargain'", "options": ["Mua hàng", "Mặc cả/Món hời", "Bán hàng", "Đắt đỏ"], "correct": 1 },
         { "question": "Dịch: 'Department store'", "options": ["Cửa hàng tiện lợi", "Cửa hàng bách hóa", "Chợ đêm", "Shop quần áo"], "correct": 1 },
         { "question": "Dịch: 'Discount'", "options": ["Tăng giá", "Giảm giá", "Giá rẻ", "Tiền thừa"], "correct": 1 },
