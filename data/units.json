@@ -204,7 +204,7 @@
     "questions": [
         { "question": "The ______ destroyed the houses.", "options": ["flood", "sun", "wind", "rain"], "correct": 0 },
         { "question": "An ______ shook the ground.", "options": ["earthquake", "ocean", "river", "lake"], "correct": 0 },
-        { "question": "The ______ is coming.", "options": ["storm", "warm", "cold", "nice"], "correct": 0 },
+        { "question": "The ______ is coming.", "options": ["storm", "warm", "cool", "nice"], "correct": 0 },
         { "question": "They were ______ safely.", "options": ["rescued", "lost", "gone", "run"], "correct": 0 },
         { "question": "Keep an emergency ______ ready.", "options": ["kit", "bag", "box", "toy"], "correct": 0 },
         { "question": "Dịch: 'Earthquake'", "options": ["Sóng thần", "Động đất", "Núi lửa", "Lũ lụt"], "correct": 1 },
