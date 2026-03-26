@@ -13,6 +13,11 @@
         .hint { font-size: 13px; color: #64748b; margin: 15px 0 5px 2px; font-weight: 600; }
         input { width: 100%; padding: 14px; margin-bottom: 5px; border: 1.5px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; transition: 0.3s; font-size: 15px; }
         input:focus { border-color: #34a853; outline: none; box-shadow: 0 0 0 3px rgba(52, 168, 83, 0.1); }
+        
+        /* Style cho phần mật khẩu có icon */
+        .pass-wrapper { position: relative; width: 100%; }
+        .toggle-btn { position: absolute; right: 12px; top: 14px; cursor: pointer; font-size: 18px; user-select: none; }
+        
         button { width: 100%; padding: 14px; background: #34a853; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 20px; font-size: 16px; }
         button:hover { background: #2d8e47; transform: translateY(-1px); }
         .login-link { text-align: center; margin-top: 20px; font-size: 14px; color: #64748b; }
@@ -26,18 +31,34 @@
         <form id="regForm">
             <p class="hint">Tên đăng nhập (≥ 6 ký tự)</p>
             <input type="text" id="u" placeholder="Ví dụ: hocsinh2026" required>
+            
             <p class="hint">Mật khẩu (≥ 8 ký tự)</p>
-            <input type="password" id="p" placeholder="••••••••" required>
+            <div class="pass-wrapper">
+                <input type="password" id="p" placeholder="••••••••" required>
+                <span class="toggle-btn" id="toggleP">👁️</span>
+            </div>
+            
             <button type="submit">ĐĂNG KÝ NGAY</button>
         </form>
         <p class="login-link">Đã có tài khoản? <a href="/login">Đăng nhập</a></p>
     </div>
 
     <script>
+        // Xử lý ẩn/hiện mật khẩu
+        const pInput = document.getElementById('p');
+        const toggleBtn = document.getElementById('toggleP');
+
+        toggleBtn.onclick = () => {
+            const isPass = pInput.type === 'password';
+            pInput.type = isPass ? 'text' : 'password';
+            toggleBtn.textContent = isPass ? '🙈' : '👁️';
+        };
+
+        // Xử lý gửi form
         document.getElementById('regForm').onsubmit = async (e) => {
             e.preventDefault();
             const u = document.getElementById('u').value;
-            const p = document.getElementById('p').value;
+            const p = pInput.value;
             const errorBox = document.getElementById('error-box');
 
             if(u.length < 6 || p.length < 8) {
@@ -55,7 +76,7 @@
                 const data = await res.json();
                 
                 if(data.success) {
-                    alert("🎉 Đăng ký thành công! Đang chuyển sang trang đăng nhập.");
+                    alert("🎉 Đăng ký thành công!");
                     window.location.href = "/login";
                 } else {
                     errorBox.innerText = "❌ " + data.message;
