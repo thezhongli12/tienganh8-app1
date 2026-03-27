@@ -54,7 +54,30 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'admin.html'));
 });
 
-// 7. XỬ LÝ ĐĂNG NHẬP (Dùng mật khẩu 080212 để nhận diện Admin)
+// 7. XỬ LÝ ĐĂNG KÝ & ĐĂNG NHẬP
+// --- PHẦN THÊM MỚI: XỬ LÝ ĐĂNG KÝ ---
+app.post('/api/register', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        // Kiểm tra xem tên đăng nhập đã tồn tại chưa
+        const userExists = await User.findOne({ username });
+        if (userExists) {
+            return res.json({ success: false, message: "Tên đăng nhập này đã có người dùng!" });
+        }
+
+        // Lưu người dùng mới vào database
+        const newUser = new User({ username, password });
+        await newUser.save();
+        
+        res.json({ success: true, message: "Đăng ký thành công!" });
+    } catch (err) {
+        console.error(err);
+        res.json({ success: false, message: "Lỗi hệ thống khi đăng ký!" });
+    }
+});
+
+// --- GIỮ NGUYÊN: XỬ LÝ ĐĂNG NHẬP ---
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     if (password === "080212") {
