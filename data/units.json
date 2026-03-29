@@ -223,5 +223,34 @@
         { "question": "[Đọc hiểu] Call 114 for fire. -> What number for fire?", "options": ["113", "114"], "correct": 1 },
         { "question": "[Đọc hiểu] Prepare for disasters. -> Should we wait?", "options": ["Yes", "No"], "correct": 1 }
     ]
+  },
+  "10": {
+    "title": "Communication (Đang cập nhật...)",
+    "questions": [
+      {
+        "q": "Nội dung bài học này đang được giáo viên cập nhật, vui lòng quay lại sau!",
+        "a": "Đang cập nhật",
+        "options": ["Đang cập nhật", "...", "...", "..."]
+      }
+    ]
+  },
+  "11": {
+    "title": "Science and Technology (Đang cập nhật...)",
+    "questions": [
+      {
+        "q": "Nội dung đang được soạn thảo...",
+        "a": "Đang cập nhật",
+        "options": ["Đang cập nhật", "...", "...", "..."]
+      }
+    ]
+  },
+  "12": {
+    "title": "Life on Other Planets (Đang cập nhật...)",
+    "questions": [
+      {
+        "q": "Coming soon...",
+        "a": "Đang cập nhật",
+        "options": ["Đang cập nhật", "...", "...", "..."]
+      }
+    ]
   }
-}
