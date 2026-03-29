@@ -224,33 +224,34 @@
         { "question": "[Đọc hiểu] Prepare for disasters. -> Should we wait?", "options": ["Yes", "No"], "correct": 1 }
     ]
   },
-  "10": {
-    "title": "Communication (Đang cập nhật...)",
+ "10": {
+    "title": "Unit 10: Communication (Đang cập nhật...)",
     "questions": [
       {
-        "q": "Nội dung bài học này đang được giáo viên cập nhật, vui lòng quay lại sau!",
-        "a": "Đang cập nhật",
-        "options": ["Đang cập nhật", "...", "...", "..."]
+        "question": "Nội dung bài học này đang được giáo viên cập nhật, vui lòng quay lại sau!",
+        "options": ["Đang cập nhật", "...", "...", "..."],
+        "correct": 0
       }
     ]
   },
   "11": {
-    "title": "Science and Technology (Đang cập nhật...)",
+    "title": "Unit 11: Science and Tech (Đang cập nhật...)",
     "questions": [
       {
-        "q": "Nội dung đang được soạn thảo...",
-        "a": "Đang cập nhật",
-        "options": ["Đang cập nhật", "...", "...", "..."]
+        "question": "Nội dung đang được soạn thảo...",
+        "options": ["Đang cập nhật", "...", "...", "..."],
+        "correct": 0
       }
     ]
   },
   "12": {
-    "title": "Life on Other Planets (Đang cập nhật...)",
+    "title": "Unit 12: Life on Other Planets (Đang cập nhật...)",
     "questions": [
       {
-        "q": "Coming soon...",
-        "a": "Đang cập nhật",
-        "options": ["Đang cập nhật", "...", "...", "..."]
+        "question": "Coming soon...",
+        "options": ["Đang cập nhật", "...", "...", "..."],
+        "correct": 0
       }
     ]
   }
+}
