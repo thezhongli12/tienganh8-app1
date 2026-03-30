@@ -6,7 +6,7 @@
     <title>Trang Chủ - English 8</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #4f46e5; --admin: #856404; --bg: #f8fafc; }
+        :root { --primary: #4f46e5; --admin: #856404; --bg: #f8fafc; --success: #10b981; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
         .container { max-width: 900px; margin: 0 auto; }
         
@@ -15,7 +15,7 @@
         .user-box { display: flex; align-items: center; gap: 15px; }
         .username { font-weight: 700; color: var(--primary); }
         
-        /* Admin Section - Mặc định ẩn */
+        /* Admin Section */
         #admin-section { 
             display: none; 
             background: #fff3cd; 
@@ -28,13 +28,23 @@
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Unit List */
-        .unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; }
         .unit-card { background: white; padding: 20px; border-radius: 15px; border: 1px solid #e2e8f0; transition: 0.3s; cursor: pointer; text-decoration: none; color: inherit; }
         .unit-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         .unit-card h3 { margin: 0 0 10px 0; color: #334155; }
         
+        /* Dictionary Table Section (MỚI) */
+        .dictionary-card { background: white; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .dict-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .dict-select { padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; font-family: inherit; }
+        .vocab-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .vocab-table th { background: #f1f5f9; color: #475569; text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; }
+        .vocab-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        .vocab-table tr:hover { background: #f8fafc; }
+        .tag-unit { background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+
         /* Buttons */
-        .btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; font-size: 14px; }
+        .btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; font-size: 14px; display: inline-block; }
         .btn-logout { background: #fee2e2; color: #dc2626; }
         .btn-admin { background: var(--admin); color: white; }
     </style>
@@ -64,18 +74,38 @@
     </div>
 
     <h2 style="margin-bottom: 20px;">📚 Danh sách bài học</h2>
+    <div class="unit-grid" id="unit-list"></div>
 
-    <div class="unit-grid" id="unit-list">
+    <div class="dictionary-card">
+        <div class="dict-header">
+            <h2 style="margin:0;">📖 Từ điển từ vựng</h2>
+            <select id="dict-filter" class="dict-select" onchange="renderDictionary()">
+                <option value="all">Tất cả bài học</option>
+            </select>
         </div>
+        <div style="overflow-x: auto;">
+            <table class="vocab-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Unit</th>
+                        <th>Từ vựng</th>
+                        <th>Nghĩa tiếng Việt</th>
+                    </tr>
+                </thead>
+                <tbody id="vocab-body">
+                    <tr><td colspan="3" style="text-align:center;">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-
-
 <script>
-    // Hàm kiểm tra đăng nhập và phân quyền (Giữ logic cũ của bạn)
+    let globalDictionary = {};
+
     async function initPage() {
         try {
-            // Gọi API kiểm tra status (Đã sửa trong app.js để có role)
+            // 1. Kiểm tra trạng thái đăng nhập (Giữ nguyên)
             const resStatus = await fetch('/api/user-status');
             const userData = await resStatus.json();
 
@@ -84,15 +114,12 @@
                 return;
             }
 
-            // Hiện tên người dùng
             document.getElementById('display-name').innerText = userData.username;
-
-            // KIỂM TRA ROLE ADMIN ĐỂ HIỆN PHẦN QUẢN LÝ
             if (userData.role === 'admin') {
                 document.getElementById('admin-section').style.display = 'block';
             }
 
-            // Load danh sách bài học (Giữ logic cũ của bạn)
+            // 2. Load danh sách bài học (Giữ nguyên)
             const resUnits = await fetch('/api/questions');
             const units = await resUnits.json();
             const listDiv = document.getElementById('unit-list');
@@ -104,9 +131,48 @@
                 </a>
             `).join('');
 
+            // 3. Load dữ liệu từ điển (MỚI)
+            // Lưu ý: Đảm bảo bạn đã tạo file /data/dictionary.json trên server
+            const resDict = await fetch('/api/dictionary'); // Route này cần được định nghĩa trong app.js
+            globalDictionary = await resDict.json();
+            
+            // Đổ danh sách Unit vào Select Filter
+            const filter = document.getElementById('dict-filter');
+            Object.keys(globalDictionary).forEach(key => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.innerHTML = `Unit ${key}`;
+                filter.appendChild(opt);
+            });
+
+            renderDictionary();
+
         } catch (err) {
             console.error("Lỗi tải trang:", err);
+            document.getElementById('vocab-body').innerHTML = `<tr><td colspan="3" style="color:red; text-align:center;">Không thể tải từ điển. Hãy kiểm tra file dữ liệu!</td></tr>`;
         }
+    }
+
+    // Hàm hiển thị bảng từ vựng (MỚI)
+    function renderDictionary() {
+        const filterValue = document.getElementById('dict-filter').value;
+        const tbody = document.getElementById('vocab-body');
+        let html = '';
+
+        Object.keys(globalDictionary).forEach(unitKey => {
+            if (filterValue === 'all' || filterValue === unitKey) {
+                globalDictionary[unitKey].forEach(item => {
+                    html += `
+                        <tr>
+                            <td><span class="tag-unit">Unit ${unitKey}</span></td>
+                            <td style="font-weight:600; color:var(--primary);">${item[0]}</td>
+                            <td>${item[1]}</td>
+                        </tr>
+                    `;
+                });
+            }
+        });
+        tbody.innerHTML = html || '<tr><td colspan="3" style="text-align:center;">Không có dữ liệu.</td></tr>';
     }
 
     initPage();
