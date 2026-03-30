@@ -1,0 +1,65 @@
+{
+  "1": [
+    ["Snowboarding", "Trượt tuyết bằng ván"],
+    ["Keep in touch", "Giữ liên lạc"],
+    ["Origami", "Nghệ thuật gấp giấy Nhật Bản"],
+    ["Leisure", "Thời gian rảnh rỗi"],
+    ["Balance", "Sự thăng bằng, sự cân bằng"]
+  ],
+  "2": [
+    ["Combine harvester", "Máy gặt đập liên hợp"],
+    ["Hospitable", "Mến khách, hiếu khách"],
+    ["Well-trained", "Lành nghề, có tay nghề"],
+    ["Picturesque", "Đẹp, hấp dẫn (phong cảnh)"],
+    ["Paddy field", "Ruộng lúa"]
+  ],
+  "3": [
+    ["Browse", "Đọc lướt, tìm kiếm"],
+    ["Concentrate", "Tập trung (vào)"],
+    ["Expectation", "Sự kì vọng, sự mong chờ"],
+    ["Mature", "Chín chắn, trưởng thành"],
+    ["Stressful", "Căng thẳng, tạo áp lực"]
+  ],
+  "4": [
+    ["Highland", "Vùng cao nguyên"],
+    ["Folk", "Thuộc về dân gian, truyền thống"],
+    ["Minority", "Dân tộc thiểu số"],
+    ["Livestock", "Gia súc"],
+    ["Ethnic", "Dân tộc"]
+  ],
+  "5": [
+    ["Bamboo pole", "Cây nêu"],
+    ["Chase away", "Xua đuổi"],
+    ["Decorative", "Có tính trang trí"],
+    ["Longevity", "Sự sống lâu, tuổi thọ"],
+    ["Ornamental tree", "Cây cảnh"]
+  ],
+  "6": [
+    ["Dogsled", "Xe trượt tuyết chó kéo"],
+    ["Impact", "Sự ảnh hưởng"],
+    ["Independent", "Độc lập"],
+    ["Nomadic", "Du mục"],
+    ["Revive", "Sự sống lại, hồi sinh"]
+  ],
+  "7": [
+    ["Endangered species", "Các loài có nguy cơ tuyệt chủng"],
+    ["Extinction", "Sự tuyệt chủng"],
+    ["Single-use", "Sử dụng một lần"],
+    ["Participate", "Tham gia"],
+    ["Ecosystem", "Hệ sinh thái"]
+  ],
+  "8": [
+    ["Shopaholic", "Người nghiện mua sắm"],
+    ["Discount shop", "Cửa hàng hạ giá"],
+    ["Advertisement", "Quảng cáo"],
+    ["Speciality shop", "Cửa hàng bán đồ chuyên dụng"],
+    ["Bargain", "Mặc cả"]
+  ],
+  "9": [
+    ["Disaster", "Thảm họa"],
+    ["Earthquake", "Động đất"],
+    ["Rescue worker", "Nhân viên cứu hộ"],
+    ["Emergency kit", "Bộ dụng cụ khẩn cấp"],
+    ["Tsunami", "Trận sóng thần"]
+  ]
+}
