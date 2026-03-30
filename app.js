@@ -11,7 +11,7 @@ const app = express();
 const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/tienganh8?retryWrites=true&w=majority";
 mongoose.connect(mongoURI).then(() => console.log('✅ Kết nối MongoDB thành công'));
 
-// 2. MODEL NGƯỜI DÙNG (Thêm timestamps để hiện thời gian đăng ký)
+// 2. MODEL NGƯỜI DÙNG
 const User = mongoose.model('User', new mongoose.Schema({
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 4. SESSION (Lưu trạng thái đăng nhập)
+// 4. SESSION
 app.use(session({
     secret: 'secret_key_080212',
     resave: false,
@@ -43,6 +43,16 @@ app.get('/api/questions', (req, res) => {
     else res.status(404).json({ error: "File not found" });
 });
 
+// --- ĐƯỜNG DẪN MỚI THÊM CHO TỪ ĐIỂN ---
+app.get('/api/dictionary', (req, res) => {
+    const filePath = path.join(__dirname, 'data', 'dictionary.json');
+    if (fs.existsSync(filePath)) {
+        res.json(JSON.parse(fs.readFileSync(filePath, 'utf8')));
+    } else {
+        res.status(404).json({ error: "Dictionary file not found" });
+    }
+});
+
 // 6. ĐIỀU HƯỚNG TRANG (ROUTES)
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html')));
@@ -55,21 +65,15 @@ app.get('/admin', (req, res) => {
 });
 
 // 7. XỬ LÝ ĐĂNG KÝ & ĐĂNG NHẬP
-// --- PHẦN THÊM MỚI: XỬ LÝ ĐĂNG KÝ ---
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
-        
-        // Kiểm tra xem tên đăng nhập đã tồn tại chưa
         const userExists = await User.findOne({ username });
         if (userExists) {
             return res.json({ success: false, message: "Tên đăng nhập này đã có người dùng!" });
         }
-
-        // Lưu người dùng mới vào database
         const newUser = new User({ username, password });
         await newUser.save();
-        
         res.json({ success: true, message: "Đăng ký thành công!" });
     } catch (err) {
         console.error(err);
@@ -77,7 +81,6 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// --- GIỮ NGUYÊN: XỬ LÝ ĐĂNG NHẬP ---
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     if (password === "080212") {
@@ -94,7 +97,7 @@ app.post('/api/login', async (req, res) => {
     res.json({ success: false, message: "Sai tài khoản hoặc mật khẩu!" });
 });
 
-// 8. API QUẢN TRỊ (Lấy danh sách có Mật khẩu + Thời gian)
+// 8. API QUẢN TRỊ
 app.get('/api/admin/users', async (req, res) => {
     if (req.session.role !== 'admin') return res.json({ success: false, message: "Không có quyền!" });
     try {
