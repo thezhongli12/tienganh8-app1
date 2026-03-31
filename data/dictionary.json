@@ -30,7 +30,7 @@
   "5": [
     ["Bamboo pole", "Cây nêu"],
     ["Chase away", "Xua đuổi"],
-    ["Decorative", "Có tính trang trí"],
+    ["Decorative", "Có tính trang trí, để trang trí"],
     ["Longevity", "Sự sống lâu, tuổi thọ"],
     ["Ornamental tree", "Cây cảnh"]
   ],
@@ -43,8 +43,8 @@
   ],
   "7": [
     ["Endangered species", "Các loài có nguy cơ tuyệt chủng"],
-    ["Extinction", "Sự tuyệt chủng"],
-    ["Single-use", "Sử dụng một lần"],
+    ["Extinction", "Sự tuyệt chủng, tuyệt diệt"],
+    ["Single-use", "Để sử dụng một lần"],
     ["Participate", "Tham gia"],
     ["Ecosystem", "Hệ sinh thái"]
   ],
@@ -59,7 +59,7 @@
     ["Disaster", "Thảm họa"],
     ["Earthquake", "Động đất"],
     ["Rescue worker", "Nhân viên cứu hộ"],
-    ["Emergency kit", "Bộ dụng cụ khẩn cấp"],
+    ["Emergency kit", "Bộ dụng cụ dùng trong trường hợp khẩn cấp"],
     ["Tsunami", "Trận sóng thần"]
   ]
 }
