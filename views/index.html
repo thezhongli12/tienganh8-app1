@@ -19,10 +19,13 @@
         
         /* PHẦN SỬA: Bảng từ vựng thiết kế mới */
         .dictionary-card { background: white; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .dict-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
+        .dict-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; flex-wrap: wrap; gap: 15px; }
         .vocab-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
         
-        /* Header nhóm Unit */
+        /* Cải tiến Input tìm kiếm */
+        .search-box { padding: 8px 12px; border-radius: 8px; border: 1px solid #d1d5db; outline: none; min-width: 200px; }
+        .search-box:focus { border-color: var(--primary); ring: 2px solid #e0e7ff; }
+
         .unit-group-header td { 
             background: #eef2ff; 
             font-weight: 800; 
@@ -32,7 +35,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Header chính của bảng */
         .table-main-header th { 
             text-align: left; 
             padding: 12px 20px; 
@@ -41,7 +43,6 @@
             background: #fafafa;
         }
 
-        /* Hàng dữ liệu */
         .vocab-table td { padding: 14px 20px; border-bottom: 1px solid #f1f5f9; }
         .vocab-table tr:last-child td { border-bottom: none; }
         .vocab-table tr:hover:not(.unit-group-header) { background-color: #f8faff; }
@@ -79,15 +80,18 @@
             <h2 style="margin:0; font-size: 1.25rem; display: flex; align-items: center; gap: 10px;">
                 <span>📖</span> Từ điển tra cứu nhanh
             </h2>
-            <select id="dict-filter" style="padding:8px 12px; border-radius:8px; border: 1px solid #d1d5db; outline: none;" onchange="renderDictionary()">
-                <option value="all">Tất cả bài học</option>
-            </select>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <input type="text" id="dict-search" class="search-box" placeholder="Tìm kiếm từ vựng..." oninput="renderDictionary()">
+                <select id="dict-filter" style="padding:8px 12px; border-radius:8px; border: 1px solid #d1d5db; outline: none;" onchange="renderDictionary()">
+                    <option value="all">Tất cả bài học</option>
+                </select>
+            </div>
         </div>
         <div style="overflow-x: auto; border-radius: 10px; border: 1px solid #f1f5f9;">
             <table class="vocab-table">
                 <thead>
                     <tr class="table-main-header">
-                        <th>Tiếng Anh</th>
+                        <th style="width: 40%;">Tiếng Anh</th>
                         <th>Nghĩa tiếng Việt</th>
                     </tr>
                 </thead>
@@ -110,7 +114,10 @@
 
             const resUnits = await fetch('/api/questions');
             const units = await resUnits.json();
-            document.getElementById('unit-list').innerHTML = Object.keys(units).map(key => `
+            // Sắp xếp Unit theo số
+            const sortedUnitKeys = Object.keys(units).sort((a, b) => parseInt(a) - parseInt(b));
+            
+            document.getElementById('unit-list').innerHTML = sortedUnitKeys.map(key => `
                 <a href="/study?unit=${key}" class="unit-card">
                     <h3>${units[key].title}</h3>
                     <p style="font-size: 13px; color: #64748b;">Bấm để làm bài tập.</p>
@@ -120,7 +127,7 @@
             globalDictionary = await resDict.json();
             
             const filter = document.getElementById('dict-filter');
-            Object.keys(globalDictionary).sort((a,b) => a-b).forEach(key => {
+            Object.keys(globalDictionary).sort((a,b) => parseInt(a) - parseInt(b)).forEach(key => {
                 const opt = document.createElement('option');
                 opt.value = key;
                 opt.textContent = `Unit ${key}`;
@@ -128,36 +135,51 @@
             });
 
             renderDictionary();
-        } catch (err) { console.error(err); }
+        } catch (err) { 
+            console.error(err);
+            document.getElementById('vocab-body').innerHTML = '<tr><td colspan="2" style="text-align:center; color:red; padding:20px;">Lỗi tải dữ liệu. Vui lòng thử lại sau.</td></tr>';
+        }
     }
 
-    // PHẦN SỬA: Hàm render tập trung vào trải nghiệm đọc
     function renderDictionary() {
         const filterValue = document.getElementById('dict-filter').value;
+        const searchValue = document.getElementById('dict-search').value.toLowerCase().trim();
         const tbody = document.getElementById('vocab-body');
         let html = '';
+        let hasResults = false;
 
-        Object.keys(globalDictionary).sort((a,b) => a-b).forEach(unitKey => {
+        Object.keys(globalDictionary).sort((a,b) => parseInt(a) - parseInt(b)).forEach(unitKey => {
             if (filterValue === 'all' || filterValue === unitKey) {
-                // Header cho từng nhóm Unit
-                html += `
-                    <tr class="unit-group-header">
-                        <td colspan="2">UNIT ${unitKey}</td>
-                    </tr>
-                `;
-                
-                globalDictionary[unitKey].forEach(item => {
+                // Lọc từ vựng theo ô tìm kiếm
+                const filteredVocab = globalDictionary[unitKey].filter(item => 
+                    item[0].toLowerCase().includes(searchValue) || 
+                    item[1].toLowerCase().includes(searchValue)
+                );
+
+                if (filteredVocab.length > 0) {
+                    hasResults = true;
+                    // Header cho từng nhóm Unit
                     html += `
-                        <tr>
-                            <td style="font-weight:700; color:var(--primary); font-size: 15px;">${item[0]}</td>
-                            <td style="color: #475569;">${item[1]}</td>
+                        <tr class="unit-group-header">
+                            <td colspan="2">UNIT ${unitKey}</td>
                         </tr>
                     `;
-                });
+                    
+                    filteredVocab.forEach(item => {
+                        html += `
+                            <tr>
+                                <td style="font-weight:700; color:var(--primary); font-size: 15px;">${item[0]}</td>
+                                <td style="color: #475569;">${item[1]}</td>
+                            </tr>
+                        `;
+                    });
+                }
             }
         });
-        tbody.innerHTML = html || '<tr><td colspan="2" style="text-align:center; padding: 20px;">Không có dữ liệu bài học này.</td></tr>';
+        
+        tbody.innerHTML = hasResults ? html : '<tr><td colspan="2" style="text-align:center; padding: 40px; color: #64748b;">🔍 Không tìm thấy từ vựng nào phù hợp.</td></tr>';
     }
+
     initPage();
 </script>
 </body>
