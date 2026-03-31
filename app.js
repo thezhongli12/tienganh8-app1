@@ -18,10 +18,14 @@ const User = mongoose.model('User', new mongoose.Schema({
     role: { type: String, default: 'user' }
 }, { timestamps: true })); 
 
-// 3. MIDDLEWARE
+// 3. MIDDLEWARE & VIEW ENGINE
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Thiết lập EJS để có thể truyền dữ liệu câu hỏi vào giao diện làm bài
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // 4. SESSION
 app.use(session({
@@ -43,7 +47,7 @@ app.get('/api/questions', (req, res) => {
     else res.status(404).json({ error: "File not found" });
 });
 
-// --- ĐƯỜNG DẪN MỚI THÊM CHO TỪ ĐIỂN ---
+// API lấy dữ liệu từ điển cho bảng gom nhóm ở trang chủ
 app.get('/api/dictionary', (req, res) => {
     const filePath = path.join(__dirname, 'data', 'dictionary.json');
     if (fs.existsSync(filePath)) {
@@ -57,7 +61,24 @@ app.get('/api/dictionary', (req, res) => {
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'views', 'register.html')));
-app.get('/study', (req, res) => req.session.userId ? res.sendFile(path.join(__dirname, 'views', 'study.html')) : res.redirect('/login'));
+
+// Sửa lại route /study để render dữ liệu động từ units.json
+app.get('/study', (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    
+    const unitId = req.query.unit;
+    const filePath = path.join(__dirname, 'data', 'units.json');
+    
+    if (fs.existsSync(filePath)) {
+        const allUnits = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        const unitData = allUnits[unitId];
+        if (unitData) {
+            // Render file study.ejs (nhớ đổi đuôi file .html thành .ejs)
+            return res.render('study', { unit: unitData, id: unitId });
+        }
+    }
+    res.redirect('/');
+});
 
 app.get('/admin', (req, res) => {
     if (req.session.role !== 'admin') return res.redirect('/');
@@ -107,5 +128,9 @@ app.get('/api/admin/users', async (req, res) => {
 });
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
+
+// Lắng nghe cổng (Thêm để chạy local nếu cần)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
 
 module.exports = app;
