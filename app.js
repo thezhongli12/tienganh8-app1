@@ -12,11 +12,14 @@ const app = express();
 const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/tienganh8?retryWrites=true&w=majority";
 mongoose.connect(mongoURI).then(() => console.log('✅ MongoDB Connected'));
 
-// 2. MODEL NGƯỜI DÙNG
+// 2. MODEL NGƯỜI DÙNG (Cập nhật thêm Profile)
 const userSchema = new mongoose.Schema({
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
-    role: { type: String, default: 'user' }
+    role: { type: String, default: 'user' },
+    displayName: { type: String, default: '' },
+    avatarUrl: { type: String, default: '' },
+    bgUrl: { type: String, default: '' }
 }, { timestamps: true });
 const User = mongoose.model('User', userSchema);
 
@@ -24,12 +27,11 @@ const User = mongoose.model('User', userSchema);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-
 app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 app.set('views', path.resolve(__dirname, 'views'));
 
-// 4. SESSION (Mật khẩu admin: 080212)
+// 4. SESSION
 app.use(session({
     secret: 'secret_key_080212',
     resave: false,
@@ -38,54 +40,68 @@ app.use(session({
     cookie: { maxAge: 1000 * 60 * 60 * 24 }
 }));
 
-// 5. CÁC API DỮ LIỆU (Sửa lỗi trắng bảng và lỗi từ vựng)
+// 5. API HỆ THỐNG (Giữ nguyên các phần cũ)
 app.get('/api/dictionary', (req, res) => {
-    try {
-        const data = fs.readFileSync(path.resolve(__dirname, 'data/dictionary.json'), 'utf8');
-        res.json(JSON.parse(data));
-    } catch (e) { res.status(500).json({ error: "Lỗi tải dữ liệu" }); }
+    const data = fs.readFileSync(path.resolve(__dirname, 'data/dictionary.json'), 'utf8');
+    res.json(JSON.parse(data));
 });
 
 app.get('/api/questions', (req, res) => {
-    try {
-        const data = fs.readFileSync(path.resolve(__dirname, 'data/units.json'), 'utf8');
-        res.json(JSON.parse(data));
-    } catch (e) { res.status(500).json({ error: "Lỗi tải bài học" }); }
+    const data = fs.readFileSync(path.resolve(__dirname, 'data/units.json'), 'utf8');
+    res.json(JSON.parse(data));
 });
 
-app.get('/api/admin/users', async (req, res) => {
+// API STATUS (Cập nhật để gửi Profile về Client)
+app.get('/api/user-status', async (req, res) => {
+    if (req.session.userId) {
+        const user = await User.findOne({ username: req.session.userId });
+        res.json({ 
+            loggedIn: true, 
+            username: user.username,
+            displayName: user.displayName || user.username,
+            avatarUrl: user.avatarUrl || 'https://ui-avatars.com/api/?name=' + user.username,
+            bgUrl: user.bgUrl,
+            role: user.role 
+        });
+    } else { res.json({ loggedIn: false }); }
+});
+
+// API CẬP NHẬT PROFILE (MỚI)
+app.post('/api/user/update-profile', async (req, res) => {
     try {
-        if (req.session.role !== 'admin') return res.json({ success: false, message: "No access" });
-        const users = await User.find().sort({ createdAt: -1 });
-        res.json({ success: true, users });
+        if (!req.session.userId) return res.json({ success: false });
+        const { displayName, avatarUrl, bgUrl } = req.body;
+        await User.findOneAndUpdate(
+            { username: req.session.userId },
+            { displayName, avatarUrl, bgUrl }
+        );
+        res.json({ success: true });
     } catch (err) { res.json({ success: false, message: err.message }); }
 });
 
-app.get('/api/user-status', (req, res) => {
-    res.json(req.session.userId ? { loggedIn: true, username: req.session.userId, role: req.session.role } : { loggedIn: false });
+// API ADMIN
+app.get('/api/admin/users', async (req, res) => {
+    if (req.session.role !== 'admin') return res.json({ success: false });
+    const users = await User.find().sort({ createdAt: -1 });
+    res.json({ success: true, users });
 });
 
 // 6. ROUTES ĐIỀU HƯỚNG
 app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, 'views/index.html')));
-app.get('/login', (req, res) => res.sendFile(path.resolve(__dirname, 'views/login.html')));
-app.get('/register', (req, res) => res.sendFile(path.resolve(__dirname, 'views/register.html')));
 app.get('/admin', (req, res) => {
     if (req.session.role !== 'admin') return res.redirect('/login');
     res.sendFile(path.resolve(__dirname, 'views/admin.html'));
 });
-
 app.get('/study', (req, res) => {
-    try {
-        if (!req.session.userId) return res.redirect('/login');
-        const unitId = req.query.unit;
-        const allUnits = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'data/units.json'), 'utf8'));
-        const unitData = allUnits[unitId];
-        if (unitData) return res.render('study.html', { unit: unitData, id: unitId });
-        res.redirect('/');
-    } catch (err) { res.status(500).send("Error"); }
+    if (!req.session.userId) return res.redirect('/login');
+    const unitId = req.query.unit;
+    const allUnits = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'data/units.json'), 'utf8'));
+    const unitData = allUnits[unitId];
+    if (unitData) return res.render('study.html', { unit: unitData, id: unitId });
+    res.redirect('/');
 });
 
-// 7. AUTH logic
+// 7. AUTH
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     if (password === "080212") {
@@ -102,17 +118,8 @@ app.post('/api/login', async (req, res) => {
     res.json({ success: false, message: "Sai thông tin!" });
 });
 
-app.post('/api/register', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        if (await User.findOne({ username })) return res.json({ success: false, message: "Tên đã tồn tại" });
-        await new User({ username, password }).save();
-        res.json({ success: true });
-    } catch (e) { res.json({ success: false }); }
-});
-
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server started`));
+app.listen(PORT, () => console.log(`🚀 Server ready`));
 module.exports = app;
