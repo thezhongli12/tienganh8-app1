@@ -3,184 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang Chủ - English 8</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Học Tiếng Anh 8</title>
     <style>
-        :root { --primary: #4f46e5; --admin: #856404; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
-        .container { max-width: 900px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        .user-box { display: flex; align-items: center; gap: 15px; }
-        .username { font-weight: 700; color: var(--primary); }
-        #admin-section { display: none; background: #fff3cd; border: 1px dashed #ffeeba; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-        .unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; }
-        .unit-card { background: white; padding: 20px; border-radius: 15px; border: 1px solid #e2e8f0; transition: 0.3s; cursor: pointer; text-decoration: none; color: inherit; }
-        .unit-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f0f2f5; transition: background 0.5s ease; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
         
-        /* PHẦN SỬA: Bảng từ vựng thiết kế mới */
-        .dictionary-card { background: white; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .dict-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; flex-wrap: wrap; gap: 15px; }
-        .vocab-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+        /* Profile Section */
+        .profile-card { background: rgba(255, 255, 255, 0.9); padding: 20px; border-radius: 15px; display: none; align-items: center; gap: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px; backdrop-filter: blur(5px); }
+        .avatar-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #3b82f6; }
+        .settings-btn { background: #3b82f6; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 14px; }
         
-        /* Cải tiến Input tìm kiếm */
-        .search-box { padding: 8px 12px; border-radius: 8px; border: 1px solid #d1d5db; outline: none; min-width: 200px; }
-        .search-box:focus { border-color: var(--primary); ring: 2px solid #e0e7ff; }
+        /* Modal cài đặt */
+        #settings-form { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd; }
+        .input-group { margin-bottom: 10px; }
+        .input-group input { padding: 8px; width: 250px; border: 1px solid #ccc; border-radius: 4px; }
 
-        .unit-group-header td { 
-            background: #eef2ff; 
-            font-weight: 800; 
-            color: #4338ca; 
-            padding: 12px 20px; 
-            border-top: 1px solid #e0e7ff;
-            letter-spacing: 0.5px;
-        }
-
-        .table-main-header th { 
-            text-align: left; 
-            padding: 12px 20px; 
-            color: #64748b; 
-            font-weight: 600; 
-            background: #fafafa;
-        }
-
-        .vocab-table td { padding: 14px 20px; border-bottom: 1px solid #f1f5f9; }
-        .vocab-table tr:last-child td { border-bottom: none; }
-        .vocab-table tr:hover:not(.unit-group-header) { background-color: #f8faff; }
-
-        .btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; font-size: 14px; }
-        .btn-logout { background: #fee2e2; color: #dc2626; }
+        /* Unit & Dictionary */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .unit-card { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        th { background: #3b82f6; color: white; padding: 12px; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <div class="user-box">
-            <div style="background: #e0e7ff; padding: 10px; border-radius: 50%;">👤</div>
-            <div>
-                <span style="font-size: 14px; color: #64748b;">Xin chào,</span>
-                <div class="username" id="display-name">Đang tải...</div>
-            </div>
-        </div>
-        <a href="/logout" class="btn btn-logout">Đăng xuất</a>
-    </div>
-
-    <div id="admin-section">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div><strong>🛠️ Quản trị viên</strong></div>
-            <a href="/admin" class="btn" style="background:var(--admin); color:white;">Vào Quản Lý</a>
+    <div id="profile-section" class="profile-card">
+        <img id="display-avatar" src="" class="avatar-img">
+        <div>
+            <h2 style="margin:0">Chào, <span id="display-name">Người dùng</span>!</h2>
+            <p id="role-tag" style="margin:5px 0; color: #666; font-size: 14px;"></p>
+            <button class="settings-btn" onclick="toggleSettings()">⚙️ Cài đặt Profile</button>
+            <a href="/logout" style="color: #ef4444; text-decoration: none; margin-left: 15px; font-size: 14px;">Đăng xuất</a>
         </div>
     </div>
 
-    <h2>📚 Danh sách bài học</h2>
-    <div class="unit-grid" id="unit-list"></div>
-
-    <div class="dictionary-card">
-        <div class="dict-header">
-            <h2 style="margin:0; font-size: 1.25rem; display: flex; align-items: center; gap: 10px;">
-                <span>📖</span> Từ điển tra cứu nhanh
-            </h2>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <input type="text" id="dict-search" class="search-box" placeholder="Tìm kiếm từ vựng..." oninput="renderDictionary()">
-                <select id="dict-filter" style="padding:8px 12px; border-radius:8px; border: 1px solid #d1d5db; outline: none;" onchange="renderDictionary()">
-                    <option value="all">Tất cả bài học</option>
-                </select>
-            </div>
+    <div id="settings-form" class="profile-card" style="display:none; flex-direction: column; align-items: flex-start;">
+        <h3>Tùy chỉnh cá nhân</h3>
+        <div class="input-group">
+            <label>Tên hiển thị:</label><br>
+            <input type="text" id="edit-name" placeholder="Ví dụ: Anh Tuấn">
         </div>
-        <div style="overflow-x: auto; border-radius: 10px; border: 1px solid #f1f5f9;">
-            <table class="vocab-table">
-                <thead>
-                    <tr class="table-main-header">
-                        <th style="width: 40%;">Tiếng Anh</th>
-                        <th>Nghĩa tiếng Việt</th>
-                    </tr>
-                </thead>
-                <tbody id="vocab-body"></tbody>
-            </table>
+        <div class="input-group">
+            <label>Link Ảnh đại diện (URL):</label><br>
+            <input type="text" id="edit-avatar" placeholder="https://link-anh.jpg">
+        </div>
+        <div class="input-group">
+            <label>Link Hình nền (URL):</label><br>
+            <input type="text" id="edit-bg" placeholder="https://link-hinh-nen.jpg">
+        </div>
+        <div>
+            <button onclick="saveProfile()" style="background: #22c55e; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Lưu thay đổi</button>
+            <button onclick="toggleSettings()" style="background: #94a3b8; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Hủy</button>
         </div>
     </div>
+
+    <h1>Danh sách bài học (Units)</h1>
+    <div id="unit-list" class="grid">
+        </div>
+
+    <h1>Từ điển tra cứu nhanh</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Tiếng Anh</th>
+                <th>Nghĩa tiếng Việt</th>
+            </tr>
+        </thead>
+        <tbody id="dict-list">
+            <tr><td colspan="2" style="text-align:center;">Đang tải từ vựng...</td></tr>
+        </tbody>
+    </table>
 </div>
 
 <script>
-    let globalDictionary = {};
-
-    async function initPage() {
-        try {
-            const resStatus = await fetch('/api/user-status');
-            const userData = await resStatus.json();
-            if (!userData.loggedIn) return window.location.href = '/login';
-            document.getElementById('display-name').innerText = userData.username;
-            if (userData.role === 'admin') document.getElementById('admin-section').style.display = 'block';
-
-            const resUnits = await fetch('/api/questions');
-            const units = await resUnits.json();
-            // Sắp xếp Unit theo số
-            const sortedUnitKeys = Object.keys(units).sort((a, b) => parseInt(a) - parseInt(b));
-            
-            document.getElementById('unit-list').innerHTML = sortedUnitKeys.map(key => `
-                <a href="/study?unit=${key}" class="unit-card">
-                    <h3>${units[key].title}</h3>
-                    <p style="font-size: 13px; color: #64748b;">Bấm để làm bài tập.</p>
-                </a>`).join('');
-
-            const resDict = await fetch('/api/dictionary');
-            globalDictionary = await resDict.json();
-            
-            const filter = document.getElementById('dict-filter');
-            Object.keys(globalDictionary).sort((a,b) => parseInt(a) - parseInt(b)).forEach(key => {
-                const opt = document.createElement('option');
-                opt.value = key;
-                opt.textContent = `Unit ${key}`;
-                filter.appendChild(opt);
-            });
-
-            renderDictionary();
-        } catch (err) { 
-            console.error(err);
-            document.getElementById('vocab-body').innerHTML = '<tr><td colspan="2" style="text-align:center; color:red; padding:20px;">Lỗi tải dữ liệu. Vui lòng thử lại sau.</td></tr>';
-        }
-    }
-
-    function renderDictionary() {
-        const filterValue = document.getElementById('dict-filter').value;
-        const searchValue = document.getElementById('dict-search').value.toLowerCase().trim();
-        const tbody = document.getElementById('vocab-body');
-        let html = '';
-        let hasResults = false;
-
-        Object.keys(globalDictionary).sort((a,b) => parseInt(a) - parseInt(b)).forEach(unitKey => {
-            if (filterValue === 'all' || filterValue === unitKey) {
-                // Lọc từ vựng theo ô tìm kiếm
-                const filteredVocab = globalDictionary[unitKey].filter(item => 
-                    item[0].toLowerCase().includes(searchValue) || 
-                    item[1].toLowerCase().includes(searchValue)
-                );
-
-                if (filteredVocab.length > 0) {
-                    hasResults = true;
-                    // Header cho từng nhóm Unit
-                    html += `
-                        <tr class="unit-group-header">
-                            <td colspan="2">UNIT ${unitKey}</td>
-                        </tr>
-                    `;
-                    
-                    filteredVocab.forEach(item => {
-                        html += `
-                            <tr>
-                                <td style="font-weight:700; color:var(--primary); font-size: 15px;">${item[0]}</td>
-                                <td style="color: #475569;">${item[1]}</td>
-                            </tr>
-                        `;
-                    });
-                }
-            }
-        });
+    // 1. Kiểm tra trạng thái và nạp Profile
+    async function init() {
+        const res = await fetch('/api/user-status');
+        const data = await res.json();
         
-        tbody.innerHTML = hasResults ? html : '<tr><td colspan="2" style="text-align:center; padding: 40px; color: #64748b;">🔍 Không tìm thấy từ vựng nào phù hợp.</td></tr>';
+        if (data.loggedIn) {
+            document.getElementById('profile-section').style.display = 'flex';
+            document.getElementById('display-name').innerText = data.displayName;
+            document.getElementById('display-avatar').src = data.avatarUrl;
+            document.getElementById('role-tag').innerText = data.role === 'admin' ? '⭐ Quản trị viên' : 'Học sinh';
+            
+            if (data.bgUrl) {
+                document.body.style.backgroundImage = `url('${data.bgUrl}')`;
+                document.body.style.backgroundSize = "cover";
+                document.body.style.backgroundAttachment = "fixed";
+            }
+            if (data.role === 'admin') {
+                const adminLink = document.createElement('a');
+                adminLink.href = '/admin';
+                adminLink.innerText = '🛡️ Trang Admin';
+                adminLink.style = 'display:block; margin-top:10px; color:#3b82f6; text-decoration:none; font-weight:bold;';
+                document.getElementById('profile-section').querySelector('div').appendChild(adminLink);
+            }
+        }
+        loadUnits();
+        loadDictionary();
     }
 
-    initPage();
+    function toggleSettings() {
+        const form = document.getElementById('settings-form');
+        form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    async function saveProfile() {
+        const payload = {
+            displayName: document.getElementById('edit-name').value,
+            avatarUrl: document.getElementById('edit-avatar').value,
+            bgUrl: document.getElementById('edit-bg').value
+        };
+        const res = await fetch('/api/user/update-profile', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) location.reload();
+    }
+
+    async function loadUnits() {
+        const res = await fetch('/api/questions');
+        const units = await res.json();
+        const container = document.getElementById('unit-list');
+        container.innerHTML = Object.keys(units).map(id => `
+            <div class="unit-card">
+                <h3>Unit ${id}</h3>
+                <p>${units[id].title}</p>
+                <a href="/study?unit=${id}" style="color:#3b82f6; font-weight:bold; text-decoration:none;">Bắt đầu học →</a>
+            </div>
+        `).join('');
+    }
+
+    async function loadDictionary() {
+        const res = await fetch('/api/dictionary');
+        const words = await res.json();
+        document.getElementById('dict-list').innerHTML = words.map(w => `
+            <tr>
+                <td><b>${w.en}</b></td>
+                <td>${w.vi}</td>
+            </tr>
+        `).join('');
+    }
+
+    window.onload = init;
 </script>
+
 </body>
 </html>
