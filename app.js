@@ -12,18 +12,19 @@ const app = express();
 const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/tienganh8?retryWrites=true&w=majority";
 mongoose.connect(mongoURI).then(() => console.log('✅ MongoDB Connected'));
 
-// 2. MODEL NGƯỜI DÙNG (Cập nhật thêm Profile)
+// 2. MODEL NGƯỜI DÙNG (Giữ cũ + Thêm mới)
 const userSchema = new mongoose.Schema({
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, default: 'user' },
+    // --- PHẦN MỚI THÊM ---
     displayName: { type: String, default: '' },
     avatarUrl: { type: String, default: '' },
     bgUrl: { type: String, default: '' }
 }, { timestamps: true });
 const User = mongoose.model('User', userSchema);
 
-// 3. CẤU HÌNH VIEW ENGINE & MIDDLEWARE
+// 3. MIDDLEWARE & VIEW ENGINE
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -40,7 +41,7 @@ app.use(session({
     cookie: { maxAge: 1000 * 60 * 60 * 24 }
 }));
 
-// 5. API HỆ THỐNG (Giữ nguyên các phần cũ)
+// 5. API HỆ THỐNG (Giữ nguyên không đổi)
 app.get('/api/dictionary', (req, res) => {
     const data = fs.readFileSync(path.resolve(__dirname, 'data/dictionary.json'), 'utf8');
     res.json(JSON.parse(data));
@@ -51,7 +52,7 @@ app.get('/api/questions', (req, res) => {
     res.json(JSON.parse(data));
 });
 
-// API STATUS (Cập nhật để gửi Profile về Client)
+// API STATUS (Cập nhật để gửi Profile về)
 app.get('/api/user-status', async (req, res) => {
     if (req.session.userId) {
         const user = await User.findOne({ username: req.session.userId });
@@ -66,7 +67,7 @@ app.get('/api/user-status', async (req, res) => {
     } else { res.json({ loggedIn: false }); }
 });
 
-// API CẬP NHẬT PROFILE (MỚI)
+// API CẬP NHẬT PROFILE (MỚI THÊM)
 app.post('/api/user/update-profile', async (req, res) => {
     try {
         if (!req.session.userId) return res.json({ success: false });
@@ -79,14 +80,14 @@ app.post('/api/user/update-profile', async (req, res) => {
     } catch (err) { res.json({ success: false, message: err.message }); }
 });
 
-// API ADMIN
+// API ADMIN (Giữ nguyên)
 app.get('/api/admin/users', async (req, res) => {
     if (req.session.role !== 'admin') return res.json({ success: false });
     const users = await User.find().sort({ createdAt: -1 });
     res.json({ success: true, users });
 });
 
-// 6. ROUTES ĐIỀU HƯỚNG
+// 6. ROUTES (Giữ nguyên)
 app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, 'views/index.html')));
 app.get('/admin', (req, res) => {
     if (req.session.role !== 'admin') return res.redirect('/login');
@@ -101,7 +102,7 @@ app.get('/study', (req, res) => {
     res.redirect('/');
 });
 
-// 7. AUTH
+// 7. AUTH (Giữ nguyên mật khẩu admin 080212)
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     if (password === "080212") {
