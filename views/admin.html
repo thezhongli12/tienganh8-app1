@@ -13,6 +13,8 @@
         td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
         .pass-text { color: #e11d48; font-family: monospace; font-weight: bold; background: #fff1f2; padding: 2px 6px; border-radius: 4px; }
         .time-text { color: #64748b; font-size: 12px; }
+        .sidebar a { color: white; text-decoration: none; display: block; padding: 10px 0; }
+        .sidebar a:hover { color: #3b82f6; }
     </style>
 </head>
 <body>
@@ -21,14 +23,15 @@
     <h2>ADMIN PANEL</h2>
     <p>Chào sếp! (Pass: 080212)</p>
     <hr>
-    <a href="/" style="color:white; text-decoration:none;">🏠 Về Trang Chủ</a><br><br>
-    <a href="/logout" style="color:#fb7185; text-decoration:none;">🚪 Đăng xuất</a>
+    <a href="/">🏠 Về Trang Chủ</a>
+    <a href="/logout" style="color:#fb7185;">🚪 Đăng xuất</a>
 </div>
 
 <div class="main">
     <div class="card">
         <h1>Danh sách học sinh</h1>
-        <p>Tổng số thành viên: <span id="total-count" style="font-weight:bold;">0</span></p>
+        <p>Tổng số thành viên: <span id="total-count" style="font-weight:bold; color: #3b82f6;">0</span></p>
+        
         <table>
             <thead>
                 <tr>
@@ -39,7 +42,7 @@
                 </tr>
             </thead>
             <tbody id="user-list">
-                <tr><td colspan="4" style="text-align:center;">Đang tải dữ liệu...</td></tr>
+                <tr><td colspan="4" style="text-align:center;">Đang tải dữ liệu học sinh...</td></tr>
             </tbody>
         </table>
     </div>
@@ -50,21 +53,39 @@
         try {
             const res = await fetch('/api/admin/users');
             const data = await res.json();
+
             if (data.success) {
                 document.getElementById('total-count').innerText = data.users.length;
                 const tbody = document.getElementById('user-list');
-                tbody.innerHTML = data.users.map(u => `
-                    <tr>
-                        <td class="time-text">${u.createdAt ? new Date(u.createdAt).toLocaleString('vi-VN') : 'Trước đó'}</td>
-                        <td><b>${u.username}</b></td>
-                        <td><span class="pass-text">${u.password}</span></td>
-                        <td>${u.role === 'admin' ? '⭐ Admin' : 'Học sinh'}</td>
-                    </tr>
-                `).join('');
-            } else { window.location.href = "/login"; }
-        } catch (err) { console.error(err); }
+                
+                if (data.users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa có ai đăng ký bài học.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.users.map(u => {
+                    const time = u.createdAt ? new Date(u.createdAt).toLocaleString('vi-VN') : 'Trước đó';
+                    return `
+                        <tr>
+                            <td class="time-text">${time}</td>
+                            <td><b>${u.username}</b></td>
+                            <td><span class="pass-text">${u.password}</span></td>
+                            <td>${u.role === 'admin' ? '⭐ Admin' : 'Học sinh'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                alert("Bạn không có quyền truy cập trang này!");
+                window.location.href = "/";
+            }
+        } catch (err) { 
+            console.error("Lỗi:", err);
+            document.getElementById('user-list').innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Lỗi kết nối database!</td></tr>';
+        }
     }
+    
     window.onload = loadData;
 </script>
+
 </body>
 </html>
