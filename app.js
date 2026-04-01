@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Thiết lập EJS để có thể truyền dữ liệu câu hỏi vào giao diện làm bài
+// Thiết lập EJS
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -42,18 +42,29 @@ app.get('/api/user-status', (req, res) => {
 });
 
 app.get('/api/questions', (req, res) => {
-    const filePath = path.join(__dirname, 'data', 'units.json');
-    if (fs.existsSync(filePath)) res.json(JSON.parse(fs.readFileSync(filePath, 'utf8')));
-    else res.status(404).json({ error: "File not found" });
+    try {
+        const filePath = path.join(__dirname, 'data', 'units.json');
+        if (fs.existsSync(filePath)) {
+            const data = fs.readFileSync(filePath, 'utf8');
+            res.json(JSON.parse(data));
+        } else {
+            res.status(404).json({ error: "File units.json not found" });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// API lấy dữ liệu từ điển cho bảng gom nhóm ở trang chủ
 app.get('/api/dictionary', (req, res) => {
-    const filePath = path.join(__dirname, 'data', 'dictionary.json');
-    if (fs.existsSync(filePath)) {
-        res.json(JSON.parse(fs.readFileSync(filePath, 'utf8')));
-    } else {
-        res.status(404).json({ error: "Dictionary file not found" });
+    try {
+        const filePath = path.join(__dirname, 'data', 'dictionary.json');
+        if (fs.existsSync(filePath)) {
+            res.json(JSON.parse(fs.readFileSync(filePath, 'utf8')));
+        } else {
+            res.status(404).json({ error: "Dictionary file not found" });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -62,22 +73,27 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views', 'index.htm
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'views', 'register.html')));
 
-// Sửa lại route /study để render dữ liệu động từ units.json
+// SỬA LỖI TẠI ROUTE STUDY: Thêm try-catch để báo lỗi cụ thể thay vì hiện Internal Server Error
 app.get('/study', (req, res) => {
-    if (!req.session.userId) return res.redirect('/login');
-    
-    const unitId = req.query.unit;
-    const filePath = path.join(__dirname, 'data', 'units.json');
-    
-    if (fs.existsSync(filePath)) {
-        const allUnits = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        const unitData = allUnits[unitId];
-        if (unitData) {
-            // Render file study.ejs (nhớ đổi đuôi file .html thành .ejs)
-            return res.render('study', { unit: unitData, id: unitId });
+    try {
+        if (!req.session.userId) return res.redirect('/login');
+        
+        const unitId = req.query.unit;
+        const filePath = path.join(__dirname, 'data', 'units.json');
+        
+        if (fs.existsSync(filePath)) {
+            const allUnits = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            const unitData = allUnits[unitId];
+            if (unitData) {
+                // Đảm bảo file views/study.ejs tồn tại
+                return res.render('study', { unit: unitData, id: unitId });
+            }
         }
+        res.redirect('/');
+    } catch (err) {
+        console.error("Study Route Error:", err);
+        res.status(500).send(`Server Error: ${err.message}. Hãy kiểm tra xem file views/study.ejs và data/units.json đã có chưa.`);
     }
-    res.redirect('/');
 });
 
 app.get('/admin', (req, res) => {
@@ -97,8 +113,7 @@ app.post('/api/register', async (req, res) => {
         await newUser.save();
         res.json({ success: true, message: "Đăng ký thành công!" });
     } catch (err) {
-        console.error(err);
-        res.json({ success: false, message: "Lỗi hệ thống khi đăng ký!" });
+        res.json({ success: false, message: "Lỗi hệ thống!" });
     }
 });
 
@@ -118,7 +133,6 @@ app.post('/api/login', async (req, res) => {
     res.json({ success: false, message: "Sai tài khoản hoặc mật khẩu!" });
 });
 
-// 8. API QUẢN TRỊ
 app.get('/api/admin/users', async (req, res) => {
     if (req.session.role !== 'admin') return res.json({ success: false, message: "Không có quyền!" });
     try {
@@ -129,7 +143,6 @@ app.get('/api/admin/users', async (req, res) => {
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-// Lắng nghe cổng (Thêm để chạy local nếu cần)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
 
