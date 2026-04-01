@@ -26,7 +26,6 @@
             margin: 20px auto; 
         }
 
-        /* Header & Back Button */
         .quiz-header {
             display: flex;
             align-items: center;
@@ -48,7 +47,6 @@
 
         h2#quiz-title { margin: 0; color: var(--primary); font-size: 24px; }
 
-        /* Question Cards */
         .question-card { 
             background: white; 
             padding: 25px; 
@@ -65,7 +63,6 @@
             display: block;
         }
 
-        /* Options styling */
         .options-group { display: flex; flex-direction: column; gap: 12px; }
 
         .option-label {
@@ -84,7 +81,6 @@
             background-color: #f0f7ff;
         }
 
-        /* Ẩn radio gốc, tạo custom radio */
         .option-label input[type="radio"] {
             margin-right: 15px;
             width: 18px;
@@ -92,7 +88,6 @@
             accent-color: var(--primary);
         }
 
-        /* Nút Nộp bài */
         .btn-submit { 
             width: 100%; 
             padding: 18px; 
@@ -112,7 +107,6 @@
             transform: translateY(-2px);
         }
 
-        /* Result Box */
         #result-box {
             margin-top: 30px;
             padding: 20px;
@@ -145,17 +139,15 @@
 </div>
 
 <script>
-    async function loadQuiz() {
+    // NHẬN DỮ LIỆU TRỰC TIẾP TỪ SERVER
+    // <%- ... %> dùng để đổ dữ liệu JSON mà không bị mã hóa ký tự
+    const unit = <%- JSON.stringify(unit) %>;
+    const unitId = "<%= id %>";
+
+    function loadQuiz() {
         try {
-            const res = await fetch('/api/questions');
-            const allData = await res.json();
-
-            const params = new URLSearchParams(window.location.search);
-            const unitId = params.get('unit');
-
-            if (unitId && allData[unitId]) {
-                const unit = allData[unitId];
-                document.getElementById('quiz-title').innerText = unit.title;
+            if (unit && unit.questions) {
+                document.getElementById('quiz-title').innerText = unit.title || `Unit ${unitId}`;
 
                 const qList = document.getElementById('questions-list');
                 qList.innerHTML = unit.questions.map((q, i) => `
@@ -179,7 +171,6 @@
                         if (sel && parseInt(sel.value) === q.correct) score++;
                     });
 
-                    // Hiển thị kết quả đẹp
                     document.getElementById('submit-btn').style.display = 'none';
                     const resBox = document.getElementById('result-box');
                     resBox.style.display = 'block';
@@ -191,10 +182,12 @@
                 document.getElementById('quiz-title').innerText = "Chưa có nội dung!";
             }
         } catch (e) {
-            alert("Lỗi tải dữ liệu!");
+            console.error("Lỗi tải giao diện:", e);
         }
     }
-    loadQuiz();
+    
+    // Khởi chạy ngay khi trang tải xong
+    window.onload = loadQuiz;
 </script>
 
 </body>
