@@ -139,54 +139,49 @@
 </div>
 
 <script>
-    // NHẬN DỮ LIỆU TRỰC TIẾP TỪ SERVER
-    // <%- ... %> dùng để đổ dữ liệu JSON mà không bị mã hóa ký tự
+    // DỮ LIỆU ĐƯỢC ĐỔ THẲNG TỪ SERVER XUỐNG
     const unit = <%- JSON.stringify(unit) %>;
     const unitId = "<%= id %>";
 
     function loadQuiz() {
-        try {
-            if (unit && unit.questions) {
-                document.getElementById('quiz-title').innerText = unit.title || `Unit ${unitId}`;
+        if (unit && unit.questions) {
+            document.getElementById('quiz-title').innerText = unit.title;
 
-                const qList = document.getElementById('questions-list');
-                qList.innerHTML = unit.questions.map((q, i) => `
-                    <div class="question-card">
-                        <span class="question-text">Câu ${i+1}: ${q.question}</span>
-                        <div class="options-group">
-                            ${q.options.map((opt, j) => `
-                                <label class="option-label">
-                                    <input type="radio" name="q${i}" value="${j}">
-                                    <span>${opt}</span>
-                                </label>
-                            `).join('')}
-                        </div>
+            const qList = document.getElementById('questions-list');
+            qList.innerHTML = unit.questions.map((q, i) => `
+                <div class="question-card">
+                    <span class="question-text">Câu ${i+1}: ${q.question}</span>
+                    <div class="options-group">
+                        ${q.options.map((opt, j) => `
+                            <label class="option-label">
+                                <input type="radio" name="q${i}" value="${j}">
+                                <span>${opt}</span>
+                            </label>
+                        `).join('')}
                     </div>
-                `).join('');
+                </div>
+            `).join('');
 
-                document.getElementById('submit-btn').onclick = () => {
-                    let score = 0;
-                    unit.questions.forEach((q, i) => {
-                        const sel = document.querySelector(`input[name="q${i}"]:checked`);
-                        if (sel && parseInt(sel.value) === q.correct) score++;
-                    });
+            document.getElementById('submit-btn').onclick = () => {
+                let score = 0;
+                unit.questions.forEach((q, i) => {
+                    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+                    if (sel && parseInt(sel.value) === q.correct) score++;
+                });
 
-                    document.getElementById('submit-btn').style.display = 'none';
-                    const resBox = document.getElementById('result-box');
-                    resBox.style.display = 'block';
-                    resBox.style.backgroundColor = '#e6fffa';
-                    document.getElementById('final-score').innerText = `🎉 Bạn đúng ${score}/${unit.questions.length} câu!`;
-                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-                };
-            } else {
-                document.getElementById('quiz-title').innerText = "Chưa có nội dung!";
-            }
-        } catch (e) {
-            console.error("Lỗi tải giao diện:", e);
+                document.getElementById('submit-btn').style.display = 'none';
+                const resBox = document.getElementById('result-box');
+                resBox.style.display = 'block';
+                resBox.style.backgroundColor = '#e6fffa';
+                document.getElementById('final-score').innerText = `🎉 Bạn đúng ${score}/${unit.questions.length} câu!`;
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            };
+        } else {
+            document.getElementById('quiz-title').innerText = "Không tìm thấy bài học!";
         }
     }
-    
-    // Khởi chạy ngay khi trang tải xong
+
+    // Chạy khi trang sẵn sàng
     window.onload = loadQuiz;
 </script>
 
