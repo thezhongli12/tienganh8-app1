@@ -29,7 +29,6 @@
     <div class="card">
         <h1>Danh sách học sinh</h1>
         <p>Tổng số thành viên: <span id="total-count" style="font-weight:bold;">0</span></p>
-        
         <table>
             <thead>
                 <tr>
@@ -46,36 +45,26 @@
     </div>
 </div>
 
-
-
 <script>
     async function loadData() {
         try {
             const res = await fetch('/api/admin/users');
             const data = await res.json();
-
             if (data.success) {
                 document.getElementById('total-count').innerText = data.users.length;
                 const tbody = document.getElementById('user-list');
-                tbody.innerHTML = data.users.map(u => {
-                    const time = u.createdAt ? new Date(u.createdAt).toLocaleString('vi-VN') : 'Trước đó';
-                    return `
-                        <tr>
-                            <td class="time-text">${time}</td>
-                            <td><b>${u.username}</b></td>
-                            <td><span class="pass-text">${u.password}</span></td>
-                            <td>${u.role === 'admin' ? '⭐ Admin' : 'Học sinh'}</td>
-                        </tr>
-                    `;
-                }).join('');
-            } else {
-                alert("Lỗi: " + data.message);
-                window.location.href = "/";
-            }
-        } catch (err) { console.error("Lỗi fetch:", err); }
+                tbody.innerHTML = data.users.map(u => `
+                    <tr>
+                        <td class="time-text">${u.createdAt ? new Date(u.createdAt).toLocaleString('vi-VN') : 'Trước đó'}</td>
+                        <td><b>${u.username}</b></td>
+                        <td><span class="pass-text">${u.password}</span></td>
+                        <td>${u.role === 'admin' ? '⭐ Admin' : 'Học sinh'}</td>
+                    </tr>
+                `).join('');
+            } else { window.location.href = "/login"; }
+        } catch (err) { console.error(err); }
     }
-    loadData();
+    window.onload = loadData;
 </script>
-
 </body>
 </html>
