@@ -4,7 +4,7 @@ const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const fs = require('fs');
-const ejs = require('ejs'); // Đảm bảo đã npm install ejs
+const ejs = require('ejs');
 
 const app = express();
 
@@ -24,7 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// CẤU HÌNH QUAN TRỌNG: Giúp render file .html bằng EJS
+// CẤU HÌNH ĐỂ GIỮ ĐUÔI .HTML NHƯNG VẪN RENDER ĐƯỢC DỮ LIỆU
 app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
@@ -38,7 +38,7 @@ app.use(session({
     cookie: { maxAge: 1000 * 60 * 60 * 24 }
 }));
 
-// 5. API HỆ THỐNG
+// 5. API HỆ THỐNG (Giữ nguyên các route API của bạn)
 app.get('/api/user-status', (req, res) => {
     res.json(req.session.userId ? { loggedIn: true, username: req.session.userId, role: req.session.role } : { loggedIn: false });
 });
@@ -49,18 +49,7 @@ app.get('/api/questions', (req, res) => {
         if (fs.existsSync(filePath)) {
             res.json(JSON.parse(fs.readFileSync(filePath, 'utf8')));
         } else {
-            res.status(404).json({ error: "File units.json not found" });
-        }
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.get('/api/dictionary', (req, res) => {
-    try {
-        const filePath = path.join(__dirname, 'data', 'dictionary.json');
-        if (fs.existsSync(filePath)) {
-            res.json(JSON.parse(fs.readFileSync(filePath, 'utf8')));
-        } else {
-            res.status(404).json({ error: "Dictionary file not found" });
+            res.status(404).json({ error: "File not found" });
         }
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -81,13 +70,13 @@ app.get('/study', (req, res) => {
             const allUnits = JSON.parse(fs.readFileSync(filePath, 'utf8'));
             const unitData = allUnits[unitId];
             if (unitData) {
-                // Render file study.html và truyền dữ liệu vào
+                // Render đúng file study.html và truyền dữ liệu vào
                 return res.render('study.html', { unit: unitData, id: unitId });
             }
         }
         res.redirect('/');
     } catch (err) {
-        res.status(500).send("Server Error: " + err.message);
+        res.status(500).send("Lỗi Server: " + err.message);
     }
 });
 
@@ -101,7 +90,7 @@ app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
         const userExists = await User.findOne({ username });
-        if (userExists) return res.json({ success: false, message: "Tên đăng nhập đã tồn tại!" });
+        if (userExists) return res.json({ success: false, message: "Tên này đã có người dùng!" });
         await new User({ username, password }).save();
         res.json({ success: true, message: "Đăng ký thành công!" });
     } catch (err) { res.json({ success: false, message: "Lỗi hệ thống!" }); }
