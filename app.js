@@ -4,6 +4,7 @@ const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const fs = require('fs');
+const ejs = require('ejs'); // Đảm bảo đã npm install ejs
 
 const app = express();
 
@@ -23,8 +24,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Thiết lập EJS
-app.set('view engine', 'ejs');
+// CẤU HÌNH QUAN TRỌNG: Giúp render file .html bằng EJS
+app.engine('html', ejs.renderFile);
+app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
 
 // 4. SESSION
@@ -45,14 +47,11 @@ app.get('/api/questions', (req, res) => {
     try {
         const filePath = path.join(__dirname, 'data', 'units.json');
         if (fs.existsSync(filePath)) {
-            const data = fs.readFileSync(filePath, 'utf8');
-            res.json(JSON.parse(data));
+            res.json(JSON.parse(fs.readFileSync(filePath, 'utf8')));
         } else {
             res.status(404).json({ error: "File units.json not found" });
         }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/api/dictionary', (req, res) => {
@@ -63,9 +62,7 @@ app.get('/api/dictionary', (req, res) => {
         } else {
             res.status(404).json({ error: "Dictionary file not found" });
         }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 6. ĐIỀU HƯỚNG TRANG (ROUTES)
@@ -73,7 +70,6 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views', 'index.htm
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'views', 'register.html')));
 
-// SỬA LỖI TẠI ROUTE STUDY: Thêm try-catch để báo lỗi cụ thể thay vì hiện Internal Server Error
 app.get('/study', (req, res) => {
     try {
         if (!req.session.userId) return res.redirect('/login');
@@ -85,14 +81,13 @@ app.get('/study', (req, res) => {
             const allUnits = JSON.parse(fs.readFileSync(filePath, 'utf8'));
             const unitData = allUnits[unitId];
             if (unitData) {
-                // Đảm bảo file views/study.ejs tồn tại
-                return res.render('study', { unit: unitData, id: unitId });
+                // Render file study.html và truyền dữ liệu vào
+                return res.render('study.html', { unit: unitData, id: unitId });
             }
         }
         res.redirect('/');
     } catch (err) {
-        console.error("Study Route Error:", err);
-        res.status(500).send(`Server Error: ${err.message}. Hãy kiểm tra xem file views/study.ejs và data/units.json đã có chưa.`);
+        res.status(500).send("Server Error: " + err.message);
     }
 });
 
@@ -106,15 +101,10 @@ app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
         const userExists = await User.findOne({ username });
-        if (userExists) {
-            return res.json({ success: false, message: "Tên đăng nhập này đã có người dùng!" });
-        }
-        const newUser = new User({ username, password });
-        await newUser.save();
+        if (userExists) return res.json({ success: false, message: "Tên đăng nhập đã tồn tại!" });
+        await new User({ username, password }).save();
         res.json({ success: true, message: "Đăng ký thành công!" });
-    } catch (err) {
-        res.json({ success: false, message: "Lỗi hệ thống!" });
-    }
+    } catch (err) { res.json({ success: false, message: "Lỗi hệ thống!" }); }
 });
 
 app.post('/api/login', async (req, res) => {
@@ -133,17 +123,9 @@ app.post('/api/login', async (req, res) => {
     res.json({ success: false, message: "Sai tài khoản hoặc mật khẩu!" });
 });
 
-app.get('/api/admin/users', async (req, res) => {
-    if (req.session.role !== 'admin') return res.json({ success: false, message: "Không có quyền!" });
-    try {
-        const users = await User.find({}, 'username password role createdAt').sort({ createdAt: -1 });
-        res.json({ success: true, users });
-    } catch (err) { res.json({ success: false }); }
-});
-
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
 module.exports = app;
