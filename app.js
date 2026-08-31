@@ -1,27 +1,30 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const path = require('path');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
 const fs = require('fs');
 const ejs = require('ejs');
+const admin = require('firebase-admin');
 
 const app = express();
 
-// 1. KẾT NỐI DATABASE
-const mongoURI = "mongodb+srv://admin:080212@cluster0.fwz1mo6.mongodb.net/tienganh8?retryWrites=true&w=majority";
-mongoose.connect(mongoURI).then(() => console.log('✅ MongoDB Connected'));
+// 1. KẾT NỐI FIREBASE FIRESTORE
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} else {
+    serviceAccount = require('./serviceAccountKey.json');
+}
 
-// 2. MODEL NGƯỜI DÙNG (Đã thêm trường score)
-const userSchema = new mongoose.Schema({
-    username: { type: String, unique: true, required: true },
-    password: { type: String, required: true },
-    role: { type: String, default: 'user' },
-    score: { type: Number, default: 0 } // Thêm để lưu điểm
-}, { timestamps: true });
-const User = mongoose.model('User', userSchema);
+if (!admin.apps.length) {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+}
 
-// 3. CẤU HÌNH VIEW ENGINE & MIDDLEWARE
+const db = admin.firestore();
+const usersRef = db.collection('users');
+
+// 2. CẤU HÌNH VIEW ENGINE & MIDDLEWARE
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -29,16 +32,15 @@ app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 app.set('views', path.resolve(__dirname, 'views'));
 
-// 4. SESSION
+// 3. SESSION
 app.use(session({
     secret: 'secret_key_080212',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: mongoURI }),
     cookie: { maxAge: 1000 * 60 * 60 * 24 }
 }));
 
-// 5. CÁC API DỮ LIỆU
+// 4. CÁC API DỮ LIỆU
 app.get('/api/dictionary', (req, res) => {
     try {
         const data = fs.readFileSync(path.resolve(__dirname, 'data/dictionary.json'), 'utf8');
@@ -55,27 +57,27 @@ app.get('/api/questions', (req, res) => {
 
 app.get('/api/user-status', async (req, res) => {
     if (req.session.userId) {
-        const user = await User.findOne({ username: req.session.userId });
+        const userDoc = await usersRef.doc(req.session.userId).get();
+        const userData = userDoc.exists ? userDoc.data() : null;
         res.json({ 
             loggedIn: true, 
             username: req.session.userId, 
             role: req.session.role,
-            score: user ? user.score : 0 
+            score: userData && userData.score ? userData.score : 0 
         });
     } else {
         res.json({ loggedIn: false });
     }
 });
 
-// API CẬP NHẬT ĐIỂM (Mới thêm)
+// API CẬP NHẬT ĐIỂM
 app.post('/api/user/update-score', async (req, res) => {
     try {
         if (!req.session.userId) return res.json({ success: false });
         const { points } = req.body;
-        await User.findOneAndUpdate(
-            { username: req.session.userId },
-            { $inc: { score: points } } // Cộng dồn điểm
-        );
+        await usersRef.doc(req.session.userId).update({
+            score: admin.firestore.FieldValue.increment(points)
+        });
         res.json({ success: true });
     } catch (err) { res.json({ success: false }); }
 });
@@ -83,12 +85,14 @@ app.post('/api/user/update-score', async (req, res) => {
 app.get('/api/admin/users', async (req, res) => {
     try {
         if (req.session.role !== 'admin') return res.json({ success: false, message: "No access" });
-        const users = await User.find().sort({ createdAt: -1 });
+        const snapshot = await usersRef.get();
+        const users = [];
+        snapshot.forEach(doc => users.push(doc.data()));
         res.json({ success: true, users });
     } catch (err) { res.json({ success: false, message: err.message }); }
 });
 
-// 6. ROUTES ĐIỀU HƯỚNG
+// 5. ROUTES ĐIỀU HƯỚNG
 app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, 'views/index.html')));
 app.get('/login', (req, res) => res.sendFile(path.resolve(__dirname, 'views/login.html')));
 app.get('/register', (req, res) => res.sendFile(path.resolve(__dirname, 'views/register.html')));
@@ -108,7 +112,7 @@ app.get('/study', (req, res) => {
     } catch (err) { res.status(500).send("Error"); }
 });
 
-// 7. AUTH LOGIC
+// 6. AUTH LOGIC
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     if (password === "080212") {
@@ -116,9 +120,9 @@ app.post('/api/login', async (req, res) => {
         req.session.role = 'admin';
         return res.json({ success: true, redirect: "/" });
     }
-    const user = await User.findOne({ username, password });
-    if (user) {
-        req.session.userId = user.username;
+    const userDoc = await usersRef.doc(username).get();
+    if (userDoc.exists && userDoc.data().password === password) {
+        req.session.userId = username;
         req.session.role = 'user';
         return res.json({ success: true, redirect: "/" });
     }
@@ -128,8 +132,16 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
-        if (await User.findOne({ username })) return res.json({ success: false, message: "Tên đã tồn tại" });
-        await new User({ username, password }).save();
+        const userDoc = await usersRef.doc(username).get();
+        if (userDoc.exists) return res.json({ success: false, message: "Tên đã tồn tại" });
+        
+        await usersRef.doc(username).set({
+            username: username,
+            password: password,
+            role: 'user',
+            score: 0,
+            createdAt: new Date().toISOString()
+        });
         res.json({ success: true });
     } catch (e) { res.json({ success: false }); }
 });
